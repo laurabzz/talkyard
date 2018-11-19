@@ -533,7 +533,7 @@ sealed trait User {   // REFACTOR, RENAME to People? [[NO see below, Participant
         //  Fellow = one single member (ok for both men and women, esp. in the context of membership)
         // So, rename e.g. MemberOrGroup to GroupOrFellow, and ... many many other things.
 
-        // Even even better?
+        // Even even better? [pps]
         //  Participants = one or many Participant:s   <—  this yes, abbrev pps and ppt in constr names
         //  Participant = Guest or Member
         //  Member = User Or Group
@@ -1018,13 +1018,11 @@ case class AboutMemberPrefs(
   fullName: Option[String],
   username: String,
   emailAddress: String,
-  summaryEmailIntervalMins: Option[Int],   // REFACTOR break out to EmailPrefs
+  summaryEmailIntervalMins: Option[Int],   // REFACTOR break out to EmailPrefs [REFACTORNOTFS]
   summaryEmailIfActive: Option[Boolean],   //
   about: Option[String],
   location: Option[String],
-  url: Option[String],
-  // This should be on separate obj / MembersAllNotfsPrefs  [REFACTORNOTFS]
-  siteNotfLevel: NotfLevel = NotfLevel.Normal) {
+  url: Option[String]) {
 
   require(!fullName.exists(_.trim.isEmpty), "DwE4FUKW049")
   require(!about.exists(_.trim.isEmpty), "EdE2WU4YG0")
@@ -1047,13 +1045,22 @@ case class AboutGroupPrefs(
   fullName: Option[String],
   username: String,
   summaryEmailIntervalMins: Option[Int],
-  summaryEmailIfActive: Option[Boolean],
-  // This should be on separate obj / MembersAllNotfsPrefs  [REFACTORNOTFS]
-  siteNotfLevel: NotfLevel = NotfLevel.Normal) {
+  summaryEmailIfActive: Option[Boolean]) {
 
   require(!fullName.exists(_.trim.isEmpty), "EdE05KFB521")
   require(groupId >= User.LowestNonGuestId, "DwE56KX2")
 
+}
+
+
+/**
+  * @param siteNotfLevel — None means inherit any group settings, or use the default.
+  */
+case class NotfPrefsToSave(
+  memberId: MemberId,
+  siteNotfLevel: Option[NotfLevel] = None) {
+
+  require(memberId >= User.LowestNormalMemberId, "TyE5RF0268")
 }
 
 
@@ -1173,7 +1180,7 @@ case class Group(
 
 
 object Group {
-  REFACTOR // move to object User, rename User to Participant?
+  REFACTOR // move to object User, rename User to Participant? [pps]
 
   /** Includes not-logged-in people (a.k.a. strangers) and guests, and all members. */
   val EveryoneId = 10

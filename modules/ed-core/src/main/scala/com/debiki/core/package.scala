@@ -61,12 +61,14 @@ package object core {
 
   type LoginId = String
 
-  type UserId = Int // when removing/renaming-to-UserId, search for UserId2 everywhere
+  type ParticipantId = Int
+  type GuestId = ParticipantId
+  type MemberId = ParticipantId
+  type UserId = ParticipantId
+  type GroupId = ParticipantId
 
   // rename to MemberId? Or remove, use UserId instead.
-  type RoleId = UserId
-
-  type GroupId = UserId
+  type RoleId = UserId   ; REMOVE
 
   type NotificationId = Int
 

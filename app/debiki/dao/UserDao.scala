@@ -1320,17 +1320,6 @@ trait UserDao {
       if (user.primaryEmailAddress != preferences.emailAddress)
         throwForbidden("DwE44ELK9", "Shouldn't modify one's email here")
 
-      REFACTOR // notf prefs should be a separate tab in the UI, and a separate api endpoint [REFACTORNOTFS]
-      // BUG need to first change to sth else, before set-Normal has any effect. [7KASDSRF20]
-      val oldNotfLevels = tx.loadPageNotfLevels(
-         preferences.userId, NoPageId, categoryId = None)
-      val oldSiteNotfLevel = oldNotfLevels.forWholeSite getOrElse NotfLevel.Normal
-      if (preferences.siteNotfLevel != oldSiteNotfLevel) {
-        tx.upsertPageNotfPref(
-            PageNotfPref(user.id, preferences.siteNotfLevel, wholeSite = true))
-      }
-      // -- / REFACTOR -------------------------------------------------------------------------------
-
       val userAfter = user.copyWithNewAboutPrefs(preferences)
       try tx.updateMemberInclDetails(userAfter)
       catch {
@@ -1356,7 +1345,7 @@ trait UserDao {
   }
 
 
-  def saveAboutGroupPrefs(preferences: AboutGroupPrefs, byWho: Who): Unit = {
+  def saveAboutGroupPrefs(preferences: AboutGroupPrefs, byWho: Who) {
     // Similar to saveAboutMemberPrefs above. (0QE15TW93)
     SECURITY // should create audit log entry. Should allow staff to change usernames.
     BUG // the lost update bug (if staff + user henself changes the user's prefs at the same time)
@@ -1393,20 +1382,52 @@ trait UserDao {
         tx.reconsiderSendingSummaryEmailsToEveryone()  // related: [5KRDUQ0] [8YQKSD10]
       }
 
-      REFACTOR // notf prefs should be a separate tab in the UI, and a separate api endpoint [REFACTORNOTFS]
-      // BUG need to first change to sth else, before set-Normal has any effect. [7KASDSRF20]
-      val oldSiteNotfLevel = tx.loadPageNotfLevels(
-        preferences.groupId, NoPageId, categoryId = None).forWholeSite getOrElse NotfLevel.Normal
-      if (preferences.siteNotfLevel != oldSiteNotfLevel) {
-        tx.upsertPageNotfPref(
-          PageNotfPref(group.id, preferences.siteNotfLevel, wholeSite = true))
-      }
-      // ---/ REFACTOR -------------------------------------------------------------------------------
-
       removeUserFromMemCache(group.id)
 
       // Group names aren't shown everywhere. So need not empty cache (as is however
       // done here [2WBU0R1]).
+    }
+  }
+
+
+  def loadMembersNotfPrefs(member: User, anyTx: Option[SiteTransaction] = None)
+        : MembersNotfPrefs = {
+    readOnlyTransactionMaybeReuse(anyTx) { tx =>
+      val ancestorGroupIds = tx.loadGroupIds(member)
+      val myPrefs = tx.loadCategoryAndSiteNotfPrefsForMemberId(member.id)
+      val groupsPrefs = ancestorGroupIds.flatMap(tx.loadCategoryAndSiteNotfPrefsForMemberId)
+      MembersNotfPrefs(myPrefs, groupsPrefs = groupsPrefs)
+    }
+  }
+
+
+  def saveMembersNotfPrefs(notfPrefsToSave: NotfPrefsToSave, byWho: Who) {
+    // Similar to saveAboutGroupPrefs below. (0QE15TW93)
+    SECURITY // should create audit log entry. Should allow staff to change usernames.
+    BUG // the lost update bug (if staff + user henself changes the user's prefs at the same time)
+
+    readWriteTransaction { tx =>
+      val member = tx.loadTheUser(notfPrefsToSave.memberId)
+      val me = tx.loadTheMember(byWho.id)
+
+      require(me.isStaff || me.id == member.id, "TyE2WK7PB")
+      throwForbiddenIf(member.isAdmin && !me.isAdmin,
+        "TyE6HAW204", "May not reconfigure preferences for admins")
+      throwForbiddenIf(member.isGroup && !me.isAdmin,
+        "Ty4BRS72F4", "Only admins may change group prefs, as of now")
+
+      // BUG need to first change to sth else, before set-Normal has any effect. [7KASDSRF20]
+      val oldNotfLevels = tx.loadPageNotfLevels(member.id, NoPageId, categoryId = None)
+      val oldSiteNotfLevel = oldNotfLevels.forWholeSite getOrElse NotfLevel.Normal
+      notfPrefsToSave.siteNotfLevel match {
+        case None =>
+          tx.deletePageNotfPref(PageNotfPref(member.id, NotfLevel.DoesNotMatterHere, wholeSite = true))
+        case Some(newLevel) =>
+          if (newLevel != oldSiteNotfLevel) {
+            tx.upsertPageNotfPref(
+                PageNotfPref(member.id, newLevel, wholeSite = true))
+          }
+      }
     }
   }
 

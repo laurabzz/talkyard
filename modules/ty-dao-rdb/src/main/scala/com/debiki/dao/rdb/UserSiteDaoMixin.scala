@@ -158,7 +158,7 @@ trait UserSiteDaoMixin extends SiteTransaction {
                               && trustLevelGroupId <= Group.CoreMembersId =>
         loadGroupMembersImpl(builtInGroup = Some(trustLevelGroupId))
       case _ =>
-        die("TyE2AKB7WU4", s"Bad group id: $groupId")
+        Nil
     }
   }
 

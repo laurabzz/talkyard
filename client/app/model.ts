@@ -439,6 +439,23 @@ interface PageUserSettings {
 }
 
 
+interface MembersNotfPrefs {
+  mySiteNotfLevel: number;
+  myCategoryNotfLevels: any;
+  groupsMaxNotfSitePref: any;
+  groupsMaxCatPrefs: any;
+}
+
+
+interface PageNotfPref {
+  memberId: UserId;
+  notfLevel: NotfLevel;
+  pageId?: PageId;
+  pagesInCategoryId?: CategoryId;
+  wholeSite?: boolean;
+}
+
+
 enum NotfLevel {
   EveryPostAllEdits = 9,
   WatchingAll = 8,
@@ -1508,6 +1525,9 @@ interface ListDraftsResponse {
   pageTitlesById: { [pageId: string]: string };
 }
 
+interface MembersNotfPrefsResponse {
+  notfPrefs: MembersNotfPrefs,
+}
 
 
 // ----- Service worker messages  [sw]

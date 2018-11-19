@@ -136,36 +136,33 @@ trait PageNotfPrefsSiteTxMixin extends SiteTransaction {
   }
 
 
-  def loadPeopleIdsWatchingPage(pageId: PageId, minNotfLevel: NotfLevel): Set[UserId] = {
-    loadPeopleIdsImpl("page_id", pageId, minNotfLevel)
+  def loadPageNotfPrefsOnPage(pageId: PageId): Seq[PageNotfPref] = {
+    loadPageNotfPrefsOnSth("page_id", pageId)
   }
 
-  def loadPeopleIdsWatchingCategory(categoryId: CategoryId, minNotfLevel: NotfLevel): Set[UserId] = {
-    loadPeopleIdsImpl("pages_in_category_id", categoryId.asAnyRef, minNotfLevel)
+  def loadPageNotfPrefsOnCategory(categoryId: CategoryId): Seq[PageNotfPref] = {
+    loadPageNotfPrefsOnSth("pages_in_category_id", categoryId.asAnyRef)
   }
 
-  def loadPeopleIdsWatchingWholeSite(minNotfLevel: NotfLevel): Set[UserId] = {
-    loadPeopleIdsImpl("pages_in_whole_site", true.asAnyRef, minNotfLevel)
+  def loadPageNotfPrefsOnSite(): Seq[PageNotfPref] = {
+    loadPageNotfPrefsOnSth("pages_in_whole_site", true.asAnyRef)
   }
 
+  def loadCategoryAndSiteNotfPrefsForMemberId(memberId: MemberId): Seq[PageNotfPref] = {
+    loadPageNotfPrefsOnSth("people_id", memberId.asAnyRef, skipPages = true)
+  }
 
-  def loadPeopleIdsImpl(thingColumnName: String, thingColumnValue: AnyRef, minNotfLevel: NotfLevel)
-        : Set[UserId] = {
+  def loadPageNotfPrefsOnSth(thingColumnName: String, thingColumnValue: AnyRef,
+        skipPages: Boolean = false): Seq[PageNotfPref] = {
+    val andSkipPages = if (skipPages) "and page_id is null" else ""
     val query = s"""
-      select people_id from page_notf_prefs3
+      select * from page_notf_prefs3
       where site_id = ?
         and $thingColumnName = ?
-        and notf_level >= ?
+        $andSkipPages
       """
-
-    val values = List(
-      siteId.asAnyRef,
-      thingColumnValue,
-      minNotfLevel.toInt.asAnyRef)
-
-    runQueryFindMany(query, values, rs => {
-      rs.getInt("people_id")
-    }).toSet
+    val values = List(siteId.asAnyRef, thingColumnValue)
+    runQueryFindMany(query, values, readNotfPref)
   }
 
 

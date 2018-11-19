@@ -30,6 +30,8 @@ const UsersPathSlash = UsersRoot;
 const SlashPrefsSlash = '/preferences/';  // dupl [4GKQST20]
 
 import EmailInput = debiki2.util.EmailInput;
+const aboutPathSeg = 'about';
+const notfsPathSeg = 'notifications';
 const privacyPathSeg = 'privacy';
 const accountPathSeg = 'account';  // [4JKT28TS]
 
@@ -39,8 +41,8 @@ export const UserPreferences = createFactory({
 
   render: function() {
     const prefsPathSlash = UsersPathSlash + this.props.match.params.usernameOrId + SlashPrefsSlash;
-    const aboutPath = prefsPathSlash + 'about';
-    const privacyPath = prefsPathSlash + privacyPathSeg;
+    const aboutPath = prefsPathSlash + aboutPathSeg;
+    const privacyPath = privacyPathSeg;
     const emailsLoginsPath = prefsPathSlash + accountPathSeg;
     const user: User = this.props.user;
     const location = this.props.location;
@@ -61,7 +63,8 @@ export const UserPreferences = createFactory({
     const childRoute = Switch({},
       Route({ path: prefsPathSlash, exact: true, render: ({ match }) =>
           Redirect({ to: aboutPath + location.search + location.hash })}),
-      Route({ path: '(.*)/about', exact: true, render: () => AboutUser(childProps) }),
+      Route({ path: '(.*)/' + aboutPathSeg, exact: true, render: () => AboutUser(childProps) }),
+      Route({ path: '(.*)/' + notfsPathSeg, exact: true, render: () => Notifications(childProps) }),
       Route({ path: '(.*)/' + privacyPathSeg, exact: true, render: () => Privacy(childProps) }),
       Route({ path: '(.*)/' + accountPathSeg, exact: true, render: (ps) =>
           Account({ ...childProps, ...ps }) }));
@@ -77,6 +80,8 @@ export const UserPreferences = createFactory({
           r.div({ className: 's_UP_Act_Nav' },
             r.ul({ className: 'dw-sub-nav nav nav-pills nav-stacked' },
               LiNavLink({ to: aboutPath, className: 's_UP_Prf_Nav_AbtL' }, t.upp.About),
+              isGuest ? null: LiNavLink({
+                  to: prefsPathSlash + notfsPathSeg, className: 's_UP_Prf_Nav_AbtL' }, t.Notifications),
               isGuest || isBuiltInUser ? null : LiNavLink({
                   to: privacyPath, className: 'e_UP_Prf_Nav_PrivL' }, t.upp.Privacy),
               isGuest || isBuiltInUser ? null : LiNavLink({
@@ -189,8 +194,6 @@ const AboutMember = createComponent({
           !!user.summaryEmailIntervalMins && user.summaryEmailIntervalMins !== DisableSummaryEmails,
       summaryEmailIntervalMins: user.summaryEmailIntervalMins,
       summaryEmailIfActive: user.summaryEmailIfActive,
-      siteNotfLevel: user.emailForEveryNewPost ? NotfLevel.WatchingAll : (
-          user.notfAboutNewTopics ? NotfLevel.WatchingFirst : NotfLevel.Normal),
     };
   },
 
@@ -268,13 +271,12 @@ const AboutMember = createComponent({
       emailAddress: firstDefinedOf(this._email, user.email),
       // BUG SHOULD not save these, if the user didn't change them and they're still the
       // default values.
+      // shouldn't be here: [REFACTORNOTFS] -------
       summaryEmailIntervalMins: summaryEmailIntervalMins,
       summaryEmailIfActive: this.state.summaryEmailIfActive,
+      // ------------------------------------------
       about: firstDefinedOf(this._about, user.about),
       url: firstDefinedOf(this._url, user.url),
-      // shouldn't be here: [REFACTORNOTFS] -------
-      siteNotfLevel: this.state.siteNotfLevel,
-      // ------------------------------------------
     };
     // This won't update the name in the name-login-button component. But will
     // be automatically fixed when I've ported everything to React and use
@@ -420,7 +422,81 @@ const AboutMember = createComponent({
 
         // Later: + Location
 
-        // ----- These notf settings shouldn't be here: [REFACTORNOTFS] ----------
+        isSystemUser ? null :
+          InputTypeSubmit({ id: 'e2eUP_Prefs_SaveB', value: t.Save, disabled: this.badPrefs() }),
+
+        savingInfo));
+  }
+});
+
+
+
+export const Notifications = createFactory({
+  displayName: 'Notifications',
+
+  getInitialState: function() {
+    const user: MemberInclDetails = this.props.user;
+    return {
+      siteNotfLevel: user.emailForEveryNewPost ? NotfLevel.WatchingAll : (
+          user.notfAboutNewTopics ? NotfLevel.WatchingFirst : NotfLevel.Normal),
+    };
+  },
+
+  componentDidMount: function() {
+    const member: MemberInclDetails = this.props.user;
+    this.loadNotfPrefs(member.id);
+  },
+
+  componentWillUnmount: function() {
+    this.isGone = true;
+  },
+
+  loadNotfPrefs: function(memberId) {
+    Server.loadMembersNotfPrefs(memberId, (response: MembersNotfPrefsResponse) => {
+      if (this.isGone) return;
+      this.setState({ notfPrefs: response.notfPrefs });
+    });
+  },
+
+  saveNotfPrefs: function(event) {
+    event.preventDefault();
+    const user: MemberInclDetails = this.props.user;
+    const prefs = {
+      memberId: user.id,
+      mySiteNotfLevel: this.state.siteNotfLevel,
+    };
+    // This won't update the name in the name-login-button component. But will
+    // be automatically fixed when I've ported everything to React and use
+    // some global React state instead of cookies to remember the user name.
+    Server.saveNotfPrefs(prefs, user.isGroup, () => {
+      if (this.isGone) return;
+      this.setState({
+        savingStatus: 'Saved',
+        showUsernameInput: false,
+      });
+      this.props.reloadUser(false);
+    });
+    this.setState({ savingStatus: 'Saving' });
+  },
+
+  render: function() {
+    const store: Store = this.props.store;
+    const me: Myself = store.me;
+    const user: MemberInclDetails = this.props.user;
+    const isSystemUser = user.id === SystemUserId;
+
+    // Dupl Saving... code [7UKBQT2]
+    let savingInfo = null;
+    if (this.state.savingStatus === 'Saving') {
+      savingInfo = r.i({}, ' ' + t.SavingDots);
+    }
+    else if (this.state.savingStatus === 'Saved') {
+      savingInfo = r.i({ className: 'e_Saved' }, ' ' + t.SavedDot);
+    }
+
+    return (
+      r.form({ role: 'form', onSubmit: this.savePrefs },
+
         Input({ type: 'radio', name: 'ExtraNotfs', className: 'e_notfEveryPost',
           label: t.upp.NotfAboutAll,
           checked: this.state.siteNotfLevel >= NotfLevel.WatchingAll,
@@ -435,10 +511,9 @@ const AboutMember = createComponent({
           label: "Only get notified when someone talks with you",   // I18N
           checked: this.state.siteNotfLevel === NotfLevel.Normal,
           onChange: () => this.setState({ siteNotfLevel: NotfLevel.Normal }) }),
-        // -----------------------------------------------------------------------
 
         isSystemUser ? null :
-          InputTypeSubmit({ id: 'e2eUP_Prefs_SaveB', value: t.Save, disabled: this.badPrefs() }),
+          InputTypeSubmit({ clasName: 'e_NtfPfs_SvB', value: t.Save }),
 
         savingInfo));
 

@@ -17,6 +17,7 @@
 
 package com.debiki.core
 
+import com.debiki.core.Prelude._
 import java.{util => ju}
 
 
@@ -196,6 +197,9 @@ object NotfLevel {
     */
   case object Normal extends NotfLevel(3)
 
+  // If doesn't matter.
+  val DoesNotMatterHere: Normal.type = Normal
+
   /** Notified of @mentions and direct replies only.
     */
   case object Hushed extends NotfLevel(2)
@@ -228,7 +232,7 @@ object NotfLevel {
   * @param wholeSite — the group's or member's default settings for pages across the whole site
   */
 case class PageNotfPref(
-  peopleId: UserId,
+  peopleId: UserId,  // RENAME to memberId, + db column.  [pps]
   notfLevel: NotfLevel,
   pageId: Option[PageId] = None,
   pagesInCategoryId: Option[CategoryId] = None,  // not yet impl [7KBR2AF5]
@@ -258,11 +262,31 @@ case class PageNotfLevels(
 }
 
 
-/* Later:
+case class MembersNotfPrefs(
+  mySiteNotfLevel: Option[NotfLevel],
+  myCategoryNotfLevels: Map[CategoryId, NotfLevel],
+  groupsMaxNotfSitePref: Option[PageNotfPref],
+  groupsMaxCatPrefs: Map[CategoryId, PageNotfPref]) {
+}
 
-case class MembersAllNotfPrefs(
-  peopleId: UserId,
-  pageNotfPrefs: immutable.Seq[PageNotfPref])
 
-Or maybe just:  Set[PageNotfPref]  (Set not Seq)
-  */
+case object MembersNotfPrefs {
+
+  def apply(myPrefs: Seq[PageNotfPref], groupsPrefs: Seq[PageNotfPref]): MembersNotfPrefs = {
+    val mySitePref = myPrefs.find(_.wholeSite)
+    val myCatPrefs = myPrefs.filter(_.pagesInCategoryId.isDefined)
+    val myNotfLevelsByCatId =
+      myCatPrefs.groupBy(_.pagesInCategoryId.getOrDie("TyE5BR025")).mapValues(_.head.notfLevel)
+
+    val groupsMaxNotfSitePref = groupsPrefs.filter(_.wholeSite).reduceOption((a, b) => {
+      if (a.notfLevel.toInt > b.notfLevel.toInt) a else b
+    })
+
+    new MembersNotfPrefs(
+      mySiteNotfLevel = mySitePref.map(_.notfLevel),
+      myCategoryNotfLevels = myNotfLevelsByCatId,
+      groupsMaxNotfSitePref = groupsMaxNotfSitePref,
+      groupsMaxCatPrefs = Map.empty)
+  }
+
+}

@@ -921,6 +921,16 @@ export function saveAboutUserPrefs(prefs, isGroup: boolean, success: () => void)
 }
 
 
+export function loadMembersNotfPrefs(prefs, onDone: (prefs: MembersNotfPrefsResponse) => void) {
+  postJsonSuccess(`/-/load-notf-prefs`, onDone, prefs);
+}
+
+
+export function saveNotfPrefs(prefs: MembersNotfPrefs, onDone: () => void) {
+  postJsonSuccess(`/-/save-notf-prefs`, onDone, prefs);
+}
+
+
 export function saveMemberPrivacyPrefs(prefs, success: () => void) {
  postJsonSuccess(`/-/save-privacy-prefs`, success, prefs);
 }

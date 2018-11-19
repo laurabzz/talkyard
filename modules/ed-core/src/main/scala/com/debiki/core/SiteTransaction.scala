@@ -406,7 +406,7 @@ trait SiteTransaction {
 
   def isAdmin(userId: UserId): Boolean = loadMember(userId).exists(_.isAdmin)
 
-  def loadUsers(userIds: Iterable[UserId]): immutable.Seq[User]
+  def loadUsers(userIds: Iterable[UserId]): immutable.Seq[User]  // [pps] RENAME to loadParticipants
   def loadTheUsers(userIds: UserId*): immutable.Seq[User] = {
     val usersById = loadUsersAsMap(userIds)
     userIds.to[immutable.Seq] map { id =>
@@ -444,6 +444,18 @@ trait SiteTransaction {
   def loadOwner(): Option[MemberInclDetails]
 
   def loadGroupMembers(groupId: UserId): Seq[User]
+
+  def loadUsersInGroups(groupIds: Iterable[GroupId]): Set[Member] =  // rm
+    groupIds.flatMap(id => loadGroupMembers(id)).filter(u => !u.isGroup && !u.isGuest)
+      .map(_.asInstanceOf[Member]).toSet
+
+  def loadMembersExpandGroups(memberIds: Set[UserId]): ExpandedMembers = {  // rm
+    val members = loadUsers(memberIds).toSet
+    val indies = members.filter(!_.isGroup).map(_.asInstanceOf[Member])
+    val groups = members.filter(_.isGroup).map(_.asInstanceOf[Group])
+    val usersInGroups = loadUsersInGroups(groups.map(_.id))
+    ExpandedMembers(indies, usersInGroups, groups)
+  }
 
   def insertGroup(group: Group)
   def updateGroup(group: Group)
@@ -538,9 +550,11 @@ trait SiteTransaction {
   def deletePageNotfPref(notfPref: PageNotfPref): Boolean  // notf level ignored
   // [REFACTORNOTFS] break out to a Dao, and load just for this member, but also all groups it's in?
   def loadPageNotfLevels(peopleId: UserId, pageId: PageId, categoryId: Option[CategoryId]): PageNotfLevels
-  def loadPeopleIdsWatchingPage(pageId: PageId, minNotfLevel: NotfLevel): Set[UserId]
-  def loadPeopleIdsWatchingCategory(categoryId: CategoryId, minNotfLevel: NotfLevel): Set[UserId]
-  def loadPeopleIdsWatchingWholeSite(minNotfLevel: NotfLevel): Set[UserId]
+
+  def loadPageNotfPrefsOnPage(pageId: PageId): Seq[PageNotfPref]
+  def loadPageNotfPrefsOnCategory(categoryId: CategoryId): Seq[PageNotfPref]
+  def loadPageNotfPrefsOnSite(): Seq[PageNotfPref]
+  def loadCategoryAndSiteNotfPrefsForMemberId(memberId: MemberId): Seq[PageNotfPref]
 
   def listUsernames(pageId: PageId, prefix: String): Seq[NameAndUsername]
 

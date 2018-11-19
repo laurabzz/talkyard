@@ -17,6 +17,7 @@
 
 package controllers
 
+import com.debiki.core
 import com.debiki.core._
 import com.debiki.core.Prelude._
 import com.debiki.core.User.{MinUsernameLength, isGuestId}
@@ -248,7 +249,7 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
 
       userJson += "email" -> JsString(safeEmail)
       userJson += "emailVerifiedAtMs" -> JsDateMsOrNull(user.emailVerifiedAt)
-      // [REFACTORNOTFS]  shouldn't be here -----------------
+      // [REFACTORNOTFS]  shouldn't be here -----------------  //
       userJson += "emailForEveryNewPost" -> JsBoolean(siteNotfLevel.exists(_.toInt >= NotfLevel.WatchingAll.toInt))   // [REFACTORNOTFS] remove
       userJson += "notfAboutNewTopics" -> JsBoolean(siteNotfLevel.exists(_.toInt >= NotfLevel.WatchingFirst.toInt))   // [REFACTORNOTFS] remove
       // ----------------------------------------------------
@@ -288,7 +289,7 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
 
   private def jsonForGroupInclDetails(group: Group, callerIsAdmin: Boolean,
       callerIsStaff: Boolean = false,
-      siteNotfLevel: Option[NotfLevel]): JsObject = {  // [REFACTORNOTFS] remove
+      siteNotfLevel: Option[NotfLevel]): JsObject = {  // [REFACTORNOTFS] remove  //
     var json = Json.obj(
       "id" -> group.id,
       "isGroup" -> JsTrue,
@@ -1295,6 +1296,38 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
   }
 
 
+  def loadMemberNotfPrefs(memberId: Int): Action[Unit] = GetAction { request =>
+    import request.{dao, theRequester => requester}
+    throwForbiddenIf(memberId != requester.id && !requester.isAdmin,
+        "TyE4RBSK8FG", "May not view someone elses notf prefs")
+    val member = dao.getTheUser(memberId)
+    val prefs = dao.loadMembersNotfPrefs(member)
+    OkSafeJson(membersNotfPrefsToJson(prefs))
+  }
+
+
+  def membersNotfPrefsToJson(prefs: MembersNotfPrefs): JsObject = {
+    Json.obj(  // MembersNotfPrefs
+      "mySiteNotfLevel" ->
+        JsNumberOrNull(prefs.mySiteNotfLevel.map(_.toInt)),
+      "myCategoryNotfLevels" ->
+        JsObject(prefs.myCategoryNotfLevels.map(kv => kv._1.toString -> JsNumber(kv._2.toInt))),
+      "groupsMaxNotfSitePref" ->
+        prefs.groupsMaxNotfSitePref.map(notfPrefToJson).getOrElse(JsNull),
+      "groupsMaxCatPrefs" ->
+        JsObject(Nil))
+  }
+
+
+  def saveMemberNotfPrefs: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser,
+        maxBytes = 3000) { request =>
+    import request.dao
+    val prefs = notfPrefsToSaveFromJson(request.body)
+    dao.saveMembersNotfPrefs(prefs, request.who)
+    Ok
+  }
+
+
   def saveMemberPrivacyPrefs: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser,
         maxBytes = 100) { request =>
     val prefs = memberPrivacyPrefsFromJson(request.body)
@@ -1457,9 +1490,7 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
       summaryEmailIfActive = (json \ "summaryEmailIfActive").asOpt[Boolean],
       about = (json \ "about").asOpt[String].trimNoneIfBlank,
       location = (json \ "location").asOpt[String].trimNoneIfBlank,
-      url = (json \ "url").asOpt[String].trimNoneIfBlank,
-      // These shouldn't be here: [REFACTORNOTFS] -----------
-      siteNotfLevel = NotfLevel.fromInt((json \ "siteNotfLevel").as[Int]).getOrElse(NotfLevel.Normal))
+      url = (json \ "url").asOpt[String].trimNoneIfBlank)
     // ----------------------------------------------------
   }
 
@@ -1474,10 +1505,27 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
       fullName = (json \ "fullName").asOptStringNoneIfBlank,
       username = username,
       // This one shouldn't be here: [REFACTORNOTFS] -----------
-      siteNotfLevel = NotfLevel.fromInt((json \ "siteNotfLevel").as[Int]).getOrElse(NotfLevel.Normal),
       summaryEmailIntervalMins = (json \ "summaryEmailIntervalMins").asOpt[Int],
       summaryEmailIfActive = (json \ "summaryEmailIfActive").asOpt[Boolean])
     // ----------------------------------------------------
+  }
+
+
+  private def notfPrefsToSaveFromJson(json: JsValue): NotfPrefsToSave = {
+    val anyNewSiteNotfLevelInt = (json \ "siteNotfLevel").asOpt[Int]
+    NotfPrefsToSave(
+      memberId = (json \ "memberId").as[MemberId],
+      siteNotfLevel = anyNewSiteNotfLevelInt.flatMap(NotfLevel.fromInt))
+  }
+
+
+  private def notfPrefToJson(notfPref: PageNotfPref): JsObject = {
+    Json.obj(  // PageNotfPref
+      "memberId" -> notfPref.peopleId,
+      "notfLevel" -> notfPref.notfLevel.toInt,
+      "pageId" -> notfPref.pageId,
+      "pagesInCategoryId" -> notfPref.pagesInCategoryId,
+      "wholeSite" -> notfPref.wholeSite)
   }
 
 
