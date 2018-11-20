@@ -121,7 +121,7 @@ var TagTableRow = createComponent({
         subscribersColumn,
         mutedColumn,
         r.td({},
-          notification.NotfLevelButton({ subject: { tagLabel: tagAndStats.label },
+          notification.NotfLevelButton_oldForTags({ subject: { tagLabel: tagAndStats.label },
               notfLevel: tagNotfLevel }))));
   }
 });

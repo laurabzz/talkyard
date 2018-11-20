@@ -365,7 +365,7 @@ trait SiteTransaction {
 
   def loadGroups(memberOrGroup: MemberOrGroupInclDetails): immutable.Seq[Group] = {
     val allGroups = loadGroupsAsMap()
-    val groupIds = loadGroupIds(memberOrGroup)
+    val groupIds = loadGroupIdsMemberIdFirst(memberOrGroup)
     groupIds.flatMap(allGroups.get)
   }
 
@@ -445,6 +445,7 @@ trait SiteTransaction {
 
   def loadGroupMembers(groupId: UserId): Seq[User]
 
+  /*
   def loadUsersInGroups(groupIds: Iterable[GroupId]): Set[Member] =  // rm
     groupIds.flatMap(id => loadGroupMembers(id)).filter(u => !u.isGroup && !u.isGuest)
       .map(_.asInstanceOf[Member]).toSet
@@ -455,26 +456,29 @@ trait SiteTransaction {
     val groups = members.filter(_.isGroup).map(_.asInstanceOf[Group])
     val usersInGroups = loadUsersInGroups(groups.map(_.id))
     ExpandedMembers(indies, usersInGroups, groups)
-  }
+  } */
 
   def insertGroup(group: Group)
   def updateGroup(group: Group)
   def loadGroupsAsSeq(): immutable.Seq[Group]
   def loadGroupsAsMap(): Map[UserId, Group] = loadGroupsAsSeq().map(g => g.id -> g).toMap
 
-  def loadGroupIds(anyUser: Option[User]): Vector[UserId] = {
-    anyUser.map(loadGroupIds) getOrElse Vector(Group.EveryoneId)
+  def loadGroupIdsMemberIdFirst(anyUser: Option[User]): Vector[UserId] = {
+    anyUser.map(loadGroupIdsMemberIdFirst) getOrElse Vector(Group.EveryoneId)
   }
 
-  def loadGroupIds(memberOrGroupInclDetails: MemberOrGroupInclDetails): Vector[UserId] = {
+  def loadGroupIdsMemberIdFirst(memberOrGroupInclDetails: MemberOrGroupInclDetails): Vector[UserId] = {
     val user = memberOrGroupInclDetails match {
       case m: MemberInclDetails => m.briefUser
       case g: Group => g
     }
-    loadGroupIds(user)
+    loadGroupIdsMemberIdFirst(user)
   }
 
-  def loadGroupIds(user: User): Vector[UserId] = {
+  /** Loads ids of groups the member is in. Returns them, prefixed with
+    * the members own id, first.
+    */
+  def loadGroupIdsMemberIdFirst(user: User): Vector[UserId] = {
     val G = Group
 
     val member = user match {

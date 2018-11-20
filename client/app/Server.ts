@@ -921,8 +921,9 @@ export function saveAboutUserPrefs(prefs, isGroup: boolean, success: () => void)
 }
 
 
-export function loadMembersNotfPrefs(prefs, onDone: (prefs: MembersNotfPrefsResponse) => void) {
-  postJsonSuccess(`/-/load-notf-prefs`, onDone, prefs);
+export function loadMembersNotfPrefs(memberId: UserId,
+      onDone: (prefs: MembersNotfPrefsResponse) => void) {
+  get(`/-/load-notf-prefs?memberId=${memberId}`, onDone);
 }
 
 

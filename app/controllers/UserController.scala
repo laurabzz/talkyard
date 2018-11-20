@@ -1300,22 +1300,33 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
     import request.{dao, theRequester => requester}
     throwForbiddenIf(memberId != requester.id && !requester.isAdmin,
         "TyE4RBSK8FG", "May not view someone elses notf prefs")
+    throwForbiddenIf(memberId <= MaxGuestId,
+        "TyE7WRG04RS2", "Guests cannot have notf prefs")
     val member = dao.getTheUser(memberId)
     val prefs = dao.loadMembersNotfPrefs(member)
-    OkSafeJson(membersNotfPrefsToJson(prefs))
+    //val groupsById = ...
+    OkSafeJson(Json.obj(
+      "notfPrefs" -> membersNotfPrefsToJson(prefs))
+      //later: "categoryNamesById" -> ...,
+      // "groupNamesById" ->  ..., needed for rendering prefs
+      )
   }
 
 
   def membersNotfPrefsToJson(prefs: MembersNotfPrefs): JsObject = {
-    Json.obj(  // MembersNotfPrefs
-      "mySiteNotfLevel" ->
-        JsNumberOrNull(prefs.mySiteNotfLevel.map(_.toInt)),
-      "myCategoryNotfLevels" ->
-        JsObject(prefs.myCategoryNotfLevels.map(kv => kv._1.toString -> JsNumber(kv._2.toInt))),
-      "groupsMaxNotfSitePref" ->
-        prefs.groupsMaxNotfSitePref.map(notfPrefToJson).getOrElse(JsNull),
-      "groupsMaxCatPrefs" ->
-        JsObject(Nil))
+    val myCatPrefs = JsObject(prefs.myCategoryNotfLevels.map(
+      kv => kv._1.toString -> JsNumber(kv._2.toInt)))
+    val groupSitePerf: JsValue = prefs.groupsMaxNotfSitePref.map(notfPrefToJson).getOrElse(JsNull)
+    /*Json.obj(  // MembersNotfPrefs
+      "mySiteNotfLevel" -> JsNumberOrNull(prefs.mySiteNotfLevel.map(_.toInt)),
+      "myCategoryNotfLevels" -> myCatPrefs,
+      "groupsMaxNotfSitePref" -> groupSitePerf,
+      "groupsMaxCatPrefs" -> JsObject(Nil)) */
+
+    Json.obj( // MembersNotfPrefs
+      "forSite" -> makeMyAndInheritedNotfPref(
+          prefs.mySiteNotfLevel, prefs.groupsMaxNotfSitePref, forWholeSite = true),
+      "forCategoriesById" -> Json.obj())
   }
 
 
@@ -1516,6 +1527,19 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
     NotfPrefsToSave(
       memberId = (json \ "memberId").as[MemberId],
       siteNotfLevel = anyNewSiteNotfLevelInt.flatMap(NotfLevel.fromInt))
+  }
+
+
+  private def makeMyAndInheritedNotfPref(
+      myNotfLevel: Option[NotfLevel], inheritedPref: Option[PageNotfPref],
+      forCategoryId: Option[CategoryId] = None, forWholeSite: Boolean = false): JsObject = {
+    val inheritedPrefJson: JsValue = inheritedPref.map(notfPrefToJson).getOrElse(JsNull)
+    Json.obj(  // MyAndInheritedNotfPref
+      "notfLevel" -> JsNumberOrNull(myNotfLevel.map(_.toInt)),
+      "pageId" -> JsNull,
+      "pagesInCategoryId" -> JsNumberOrNull(forCategoryId),
+      "wholeSite" -> (if (forWholeSite) JsTrue else JsNull),
+      "inheritedPref" -> inheritedPrefJson)
   }
 
 

@@ -59,7 +59,7 @@ export const Notification = createComponent({
 
 
 
-export var NotfLevelButton = createComponent({
+export var NotfLevelButton_oldForTags = createComponent({
   render: function() {
     var subject: NotfSubject = this.props.subject;
     var notfLevel: NotfLevel = this.props.notfLevel;

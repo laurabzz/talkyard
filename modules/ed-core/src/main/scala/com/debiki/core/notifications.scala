@@ -231,7 +231,7 @@ object NotfLevel {
   * @param pagesInCategoryId — the settings apply to all pages in this category.
   * @param wholeSite — the group's or member's default settings for pages across the whole site
   */
-case class PageNotfPref(
+case class PageNotfPref(   // ? RENAME to NotfPrefAboutContent?  (will also be an ...AboutGroup) or don't?
   peopleId: UserId,  // RENAME to memberId, + db column.  [pps]
   notfLevel: NotfLevel,
   pageId: Option[PageId] = None,

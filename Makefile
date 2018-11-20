@@ -128,6 +128,15 @@ up: minified-asset-bundles
 	@echo "To tail logs, you can:  sudo s/d-logsf0"
 	@echo
 
+tail: up
+	sudo s/d-logsf0
+
+restart:
+	sudo s/d-restart
+
+restart-web-app:
+	sudo s/d-restart-web-app
+
 down:
 	sudo s/d down
 

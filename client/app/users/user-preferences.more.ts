@@ -484,6 +484,7 @@ export const Notifications = createFactory({
     const me: Myself = store.me;
     const user: MemberInclDetails = this.props.user;
     const isSystemUser = user.id === SystemUserId;
+    const notfPrefs: MembersNotfPrefs = this.state.notfPrefs;
 
     // Dupl Saving... code [7UKBQT2]
     let savingInfo = null;
@@ -496,6 +497,8 @@ export const Notifications = createFactory({
 
     return (
       r.form({ role: 'form', onSubmit: this.savePrefs },
+
+        r.pre({}, JSON.stringify(notfPrefs)),
 
         Input({ type: 'radio', name: 'ExtraNotfs', className: 'e_notfEveryPost',
           label: t.upp.NotfAboutAll,

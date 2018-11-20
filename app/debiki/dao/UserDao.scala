@@ -805,7 +805,7 @@ trait UserDao {
       case _: Guest | UnknownUser => Vector(Group.EveryoneId)
       case _: Member | _: Group =>
         readOnlyTransaction { tx =>
-          tx.loadGroupIds(user)
+          tx.loadGroupIdsMemberIdFirst(user)
         }
     }
   }
@@ -1147,7 +1147,7 @@ trait UserDao {
         smallAvatar: Option[UploadRef], mediumAvatar: Option[UploadRef],
         browserIdData: BrowserIdData, tx: SiteTransaction) {
 
-      val userBefore = tx.loadTheMemberInclDetails(userId)
+      val userBefore = tx.loadTheMemberInclDetails(userId)  ; SECURITY ; COULD // loadTheUserOrThrowForbidden, else logs really long exception
       val userAfter = userBefore.copy(
         tinyAvatar = tinyAvatar,
         smallAvatar = smallAvatar,
@@ -1393,7 +1393,7 @@ trait UserDao {
   def loadMembersNotfPrefs(member: User, anyTx: Option[SiteTransaction] = None)
         : MembersNotfPrefs = {
     readOnlyTransactionMaybeReuse(anyTx) { tx =>
-      val ancestorGroupIds = tx.loadGroupIds(member)
+      val ancestorGroupIds = tx.loadGroupIdsMemberIdFirst(member).drop(1)
       val myPrefs = tx.loadCategoryAndSiteNotfPrefsForMemberId(member.id)
       val groupsPrefs = ancestorGroupIds.flatMap(tx.loadCategoryAndSiteNotfPrefsForMemberId)
       MembersNotfPrefs(myPrefs, groupsPrefs = groupsPrefs)

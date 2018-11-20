@@ -120,7 +120,7 @@ GET   /-/list-all-users         controllers.UserController.listAllUsers(username
 GET   /-/list-usernames         controllers.UserController.listUsernames(pageId, prefix)
 POST  /-/save-about-member-prefs controllers.UserController.saveAboutMemberPrefs
 POST  /-/save-about-group-prefs controllers.UserController.saveGroupPreferences
-POST  /-/load-notf-prefs        controllers.UserController.loadMemberNotfPrefs(memberId: Int)
+GET   /-/load-notf-prefs        controllers.UserController.loadMemberNotfPrefs(memberId: Int)
 POST  /-/save-notf-prefs        controllers.UserController.saveMemberNotfPrefs
 POST  /-/save-privacy-prefs     controllers.UserController.saveMemberPrivacyPrefs
 POST  /-/save-guest             controllers.UserController.saveGuest

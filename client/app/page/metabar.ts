@@ -33,7 +33,7 @@ const ExplainingListItem = util.ExplainingListItem;
 
 let notfsLevelDropdownModal;
 
-// CLEAN_UP move to separate file [5WKBQAA0]
+// CLEAN_UP move to separate file [5WKBQAA0]  // <--  NEXT
 export function openNotfsLevelDropdown(openButton, subject: NotfSubject, currentLevel: NotfLevel) {
   if (!notfsLevelDropdownModal) {
     notfsLevelDropdownModal = ReactDOM.render(NotfsLevelDropdownModal(), utils.makeMountNode());
@@ -197,7 +197,7 @@ const MetabarDetails = createComponent({
 
 
 // some dupl code [6KUW24]
-// CLEAN_UP move to separate file [5WKBQAA0]
+// CLEAN_UP move to separate file [5WKBQAA0]  NEXT
 const NotfsLevelDropdownModal = createComponent({
   displayName: 'NotfsLevelDropdownModal',
 

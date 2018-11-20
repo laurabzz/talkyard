@@ -440,10 +440,24 @@ interface PageUserSettings {
 
 
 interface MembersNotfPrefs {
-  mySiteNotfLevel: number;
-  myCategoryNotfLevels: any;
-  groupsMaxNotfSitePref: any;
-  groupsMaxCatPrefs: any;
+  forSite: MyAndInheritedNotfPref;
+  forCategoriesById: { [categoryId: number]: MyAndInheritedNotfPref };
+  //forTagsById: ...
+
+  /*
+  //mySiteNotfLevel: number;
+  //myCategoryNotfLevels: any;
+  //groupsMaxNotfSitePref: any;
+  //groupsMaxCatPrefs: any; */
+}
+
+
+interface MyAndInheritedNotfPref {
+  notfLevel?: NotfLevel;
+  pageId?: PageId;
+  pagesInCategoryId?: CategoryId;
+  wholeSite?: boolean;
+  anyInheritedNotfPref?: PageNotfPref;
 }
 
 

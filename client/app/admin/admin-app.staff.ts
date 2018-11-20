@@ -303,11 +303,13 @@ const AdminAppComponent = createReactClass(<any> {
 
     const childRoutes = Switch({},
         RedirAppend({ path: ar + 'users', append: '/enabled' }),
+        RedirAppend({ path: ar + 'groups', append: '/built-in' }),
         RedirAppend({ path: ar + 'review', append: '/all' }),
         RedirAppend({ path: ar + 'settings', append: '/legal' }),
         RedirAppend({ path: ar + 'customize', append: '/basic' }),
         Route({ path: ar + 'settings', render: () => SettingsPanel(childProps) }),
         Route({ path: ar + 'users', render: () => UsersTab(childProps) }),
+        Route({ path: ar + 'groups', render: () => GroupsTab(childProps) }),
         Route({ path: ar + 'customize', render: () => CustomizePanel(childProps) }),
         Route({ path: ar + 'api', render: () => ApiPanel(childProps) }),
         Route({ path: ar + 'review', render: () => ReviewAllPanel(childProps) }));
@@ -319,6 +321,7 @@ const AdminAppComponent = createReactClass(<any> {
           r.ul({ className: 'dw-main-nav nav nav-pills' },
             settingsLink,
             LiNavLink({ to: ar + 'users', className: 'e_UsrsB' }, "Users"),
+            LiNavLink({ to: ar + 'groups', className: 'e_GrpsB' }, "Groups"),
             customizeLink,
             apiLink,
             LiNavLink({ to: ar + 'review', className: 'e_RvwB' }, "Review")),
@@ -327,6 +330,32 @@ const AdminAppComponent = createReactClass(<any> {
   }
 });
 
+
+
+function GroupsTab(childProps) {
+  const bp = '/-/admin/groups/';  // groups base path
+  return (
+      r.div({},
+        r.div({ className: 'dw-sub-nav' },
+          r.ul({ className: 'nav nav-pills' },
+            LiNavLink({ to: bp + 'built-in', className: 'e_BltInL' }, "Built-In"))),
+        r.div({ className: 's_A_Gs' },
+          Switch({},
+            Route({ path: bp + 'built-in', render: () => BuiltInGroupsPanel(childProps) }),
+            ))));
+}
+
+
+function BuiltInGroupsPanel(childProps) {
+  return (
+    r.div({},
+      r.br(),
+      r.br(),
+      r.ul({},
+        r.li({}, r.a({ href: '/-/users/new_members' }, "All members")),
+        r.li({}, r.a({ href: '/-/users/full_members' }, "Full members")),
+        r.li({}, r.a({ href: '/-/users/core_members' }, "Core members")))));
+}
 
 
 function OnlyForAdmins() {
