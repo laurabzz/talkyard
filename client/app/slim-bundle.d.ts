@@ -291,7 +291,6 @@ declare namespace debiki2 {
   }
 
   namespace page {
-    var openNotfsLevelDropdown;
     var Post;
     namespace Hacks {
       function processPosts(startElemId?: string);

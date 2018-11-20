@@ -200,7 +200,7 @@ export function undeletePages(pageIds: PageId[], success: () => void) {
 
 
 export function setPageNoftLevel(newNotfLevel) {
-  Server.savePageNoftLevel(newNotfLevel);
+  Server.savePageNoftLevel(newNotfLevel);  // call directly? remove ReactActions.setPageNoftLevel?
   ReactDispatcher.handleViewAction({
     actionType: actionTypes.SetPageNotfLevel,
     newLevel: newNotfLevel

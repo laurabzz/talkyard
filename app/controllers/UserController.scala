@@ -1316,15 +1316,15 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
   def membersNotfPrefsToJson(prefs: MembersNotfPrefs): JsObject = {
     val myCatPrefs = JsObject(prefs.myCategoryNotfLevels.map(
       kv => kv._1.toString -> JsNumber(kv._2.toInt)))
-    val groupSitePerf: JsValue = prefs.groupsMaxNotfSitePref.map(notfPrefToJson).getOrElse(JsNull)
-    /*Json.obj(  // MembersNotfPrefs
+    /*val groupSitePerf: JsValue = prefs.groupsMaxNotfSitePref.map(JsPageNotfPref).getOrElse(JsNull)
+    Json.obj(  // MembersNotfPrefs
       "mySiteNotfLevel" -> JsNumberOrNull(prefs.mySiteNotfLevel.map(_.toInt)),
       "myCategoryNotfLevels" -> myCatPrefs,
       "groupsMaxNotfSitePref" -> groupSitePerf,
       "groupsMaxCatPrefs" -> JsObject(Nil)) */
 
     Json.obj( // MembersNotfPrefs
-      "forSite" -> makeMyAndInheritedNotfPref(
+      "forSite" -> JsOwnAndInheritedPageNotfPref(
           prefs.mySiteNotfLevel, prefs.groupsMaxNotfSitePref, forWholeSite = true),
       "forCategoriesById" -> Json.obj())
   }
@@ -1527,29 +1527,6 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
     NotfPrefsToSave(
       memberId = (json \ "memberId").as[MemberId],
       siteNotfLevel = anyNewSiteNotfLevelInt.flatMap(NotfLevel.fromInt))
-  }
-
-
-  private def makeMyAndInheritedNotfPref(
-      myNotfLevel: Option[NotfLevel], inheritedPref: Option[PageNotfPref],
-      forCategoryId: Option[CategoryId] = None, forWholeSite: Boolean = false): JsObject = {
-    val inheritedPrefJson: JsValue = inheritedPref.map(notfPrefToJson).getOrElse(JsNull)
-    Json.obj(  // MyAndInheritedNotfPref
-      "notfLevel" -> JsNumberOrNull(myNotfLevel.map(_.toInt)),
-      "pageId" -> JsNull,
-      "pagesInCategoryId" -> JsNumberOrNull(forCategoryId),
-      "wholeSite" -> (if (forWholeSite) JsTrue else JsNull),
-      "inheritedPref" -> inheritedPrefJson)
-  }
-
-
-  private def notfPrefToJson(notfPref: PageNotfPref): JsObject = {
-    Json.obj(  // PageNotfPref
-      "memberId" -> notfPref.peopleId,
-      "notfLevel" -> notfPref.notfLevel.toInt,
-      "pageId" -> notfPref.pageId,
-      "pagesInCategoryId" -> notfPref.pagesInCategoryId,
-      "wholeSite" -> notfPref.wholeSite)
   }
 
 

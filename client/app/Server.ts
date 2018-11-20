@@ -852,9 +852,18 @@ export function savePageNoftLevel(newNotfLevel) {
   postJsonSuccess('/-/set-page-notf-level', () => {
     const store: Store = ReactStore.allData();
     const me: Myself = store.me;
-    const myPageData: MyPageData = me.myCurrentPageData;
-    myPageData.rolePageSettings = { notfLevel: newNotfLevel };  // [redux] modifying state in place
-    ReactActions.patchTheStore({ me: me });
+    const myCurrentPageData: MyPageData = me.myCurrentPageData;
+    const pageNotfPref = myCurrentPageData.pageNotfPref;
+    const newMe = { ...me,
+      myCurrentPageData: { ...myCurrentPageData,
+        pageNotfPref: { ...pageNotfPref,
+          notfLevel: newNotfLevel
+        },
+      },
+    };
+    //const myPageData: MyPageData = me.myCurrentPageData;
+    //myPageData.pageNotfPref = { notfLevel: newNotfLevel };  // [red ux] modify ing state in place
+    ReactActions.patchTheStore({ me: newMe });
   }, {
     pageId: getPageId(),
     pageNotfLevel: newNotfLevel

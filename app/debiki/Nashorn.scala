@@ -452,7 +452,7 @@ class Nashorn(globals: Globals) {
         |
         |    // Fill in no-page-data to avoid null errors. Dupl code. [4FBR20]
         |    theStore.me.myCurrentPageData = {
-        |      rolePageSettings: { notfLevel: NotfLevel.Normal },
+        |      pageNotfPref: { notfLevel: NotfLevel.Normal },
         |      votes: {},
         |      unapprovedPosts: {},
         |      unapprovedPostAuthors: [],

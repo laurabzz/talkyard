@@ -65,7 +65,7 @@ export var NotfLevelButton_oldForTags = createComponent({
     var notfLevel: NotfLevel = this.props.notfLevel;
     return (
       Button({ id: '7bw3gz5', className: 'dw-notf-level',
-          onClick: event => page.openNotfsLevelDropdown(event.target, subject, notfLevel ) },
+          onClick: event => {} }, // NEXT openNotfPrefDropdown  was: page.openNotfsLevelDropdown(event.target, subject, notfLevel ) },
         r.span({}, notfLevel_title(notfLevel) + ' ', r.span({className: 'caret'}))));
   }
 });

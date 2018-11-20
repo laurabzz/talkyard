@@ -628,9 +628,13 @@ class JsonMaker(dao: SiteDao) {
     // dupl line [8AKBR0]
     val notfsAndCounts = loadNotifications(user.id, transaction, unseenFirst = true, limit = 20)
 
-    val (rolePageSettings, votes, unapprovedPosts, unapprovedAuthors) =
+    val (ownAndInheritedNotfPref, votes, unapprovedPosts, unapprovedAuthors) =
       anyPageId map { pageId =>
-        val rolePageSettings = user.anyMemberId.map({ userId =>
+        // NEXT
+        //  val prefs = dao.loadMembersNotfPrefs(member)
+        //  JsOwnAndInheritedPageNotfPref(
+        //  prefs.mySiteNotfLevel, prefs.groupsMaxNotfSitePref, forPageId = Some(..))
+        val ownAndInheritedNotfPref = user.anyMemberId.map({ userId =>
           val notfLevels = transaction.loadPageNotfLevels(userId, pageId = pageId,
             // Per category notfs not impl [7KBR2AF5]  [REFACTORNOTFS]
             categoryId = None)
@@ -640,7 +644,7 @@ class JsonMaker(dao: SiteDao) {
         // + flags, interesting for staff, & so people won't attempt to flag twice [7KW20WY1]
         val (postsJson, postAuthorsJson) =
           unapprovedPostsAndAuthorsJson(user, pageId, unapprovedPostAuthorIds, transaction)
-        (rolePageSettings, votes, postsJson, postAuthorsJson)
+        (ownAndInheritedNotfPref, votes, postsJson, postAuthorsJson)
       } getOrElse (JsEmptyObj, JsEmptyObj, JsEmptyObj, JsArray())
 
     val threatLevel = user match {
@@ -658,8 +662,8 @@ class JsonMaker(dao: SiteDao) {
       case None => Json.obj()
       case Some(pageId) =>
         Json.obj(pageId ->
-          Json.obj(
-            "rolePageSettings" -> rolePageSettings,  // [REFACTORNOTFS] rename to pageNotfSettings?
+          Json.obj(  // MyPageData
+            "pageNotfPref" -> ownAndInheritedNotfPref,
             "readingProgress" -> anyReadingProgressJson,
             "votes" -> votes,
             // later: "flags" -> JsArray(...) [7KW20WY1]
@@ -1830,6 +1834,32 @@ object JsX {
       "title" -> JsString(draft.title),
       "text" -> JsString(draft.text))
   }
+
+  def JsOwnAndInheritedPageNotfPref(
+        myNotfLevel: Option[NotfLevel],
+        inheritedPref: Option[PageNotfPref],
+        forPageId: Option[PageId] = None,
+        forCategoryId: Option[CategoryId] = None,
+        forWholeSite: Boolean = false): JsObject = {
+    val inheritedPrefJson: JsValue = inheritedPref.map(JsPageNotfPref).getOrElse(JsNull)
+    Json.obj(  // MyAndInheritedNotfPref
+      "notfLevel" -> JsNumberOrNull(myNotfLevel.map(_.toInt)),
+      "pageId" -> JsStringOrNull(forPageId),
+      "pagesInCategoryId" -> JsNumberOrNull(forCategoryId),
+      "wholeSite" -> (if (forWholeSite) JsTrue else JsNull),
+      "inheritedPref" -> inheritedPrefJson)
+  }
+
+
+  def JsPageNotfPref(notfPref: PageNotfPref): JsObject = {
+    Json.obj(  // PageNotfPref
+      "memberId" -> notfPref.peopleId,
+      "notfLevel" -> notfPref.notfLevel.toInt,
+      "pageId" -> notfPref.pageId,
+      "pagesInCategoryId" -> notfPref.pagesInCategoryId,
+      "wholeSite" -> notfPref.wholeSite)
+  }
+
 
   def JsApiSecret(apiSecret: ApiSecret): JsObject = {
     Json.obj(

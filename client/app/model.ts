@@ -348,7 +348,7 @@ interface PagePostNrId {
 
 interface MyPageData {
   dbgSrc?: string;
-  rolePageSettings: PageUserSettings;
+  pageNotfPref: MyAndInheritedNotfPref;
   readingProgress?: ReadingProgress;
   votes: any; // RENAME to votesByPostNr?   CLEAN_UP also see just below:  id or nr
   unapprovedPosts: { [id: number]: Post };
@@ -452,7 +452,7 @@ interface MembersNotfPrefs {
 }
 
 
-interface MyAndInheritedNotfPref {
+interface MyAndInheritedNotfPref {  // RENAME to OwnAndInheritedNotfPref?
   notfLevel?: NotfLevel;
   pageId?: PageId;
   pagesInCategoryId?: CategoryId;

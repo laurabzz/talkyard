@@ -78,7 +78,7 @@ export function makeAutoPage(): Page {
 export function makeNoPageData(): MyPageData {
   return {
     dbgSrc: 'MyNP',
-    rolePageSettings: { notfLevel: NotfLevel.Normal },
+    pageNotfPref: { notfLevel: NotfLevel.Normal },
     votes: {},
     unapprovedPosts: {},
     unapprovedPostAuthors: [],
@@ -154,8 +154,8 @@ ReactDispatcher.register(function(payload) {
       currentPage.pinWhere = undefined;
       break;
 
-    case ReactActions.actionTypes.SetPageNotfLevel:
-      store.me.myCurrentPageData.rolePageSettings.notfLevel = action.newLevel;
+    case ReactActions.actionTypes.SetPageNotfLevel:  // remove ??
+      //store.me.myCurrentPageData.rolePageSettings.notfLevel = action.newLevel;  ??
       break;
 
     case ReactActions.actionTypes.AcceptAnswer:
