@@ -848,8 +848,20 @@ export function lockThreatLevel(userId: UserId, threatLevel: ThreatLevel, succes
 }
 
 
-export function saveContentNoftPref(memberId: UserId, pref: MyAndInheritedNotfPref) {
+export function saveContNotfPrefUpdStore(memberId: UserId, pref: MyAndInheritedNotfPref) {
   postJsonSuccess('/-/save-content-notf-pref', () => {
+    const store: Store = ReactStore.allData();
+    const me: Myself = store.me;
+    const myCurrentPageData: MyPageData = me.myCurrentPageData;
+    const pageNotfPref = myCurrentPageData.pageNotfPref;
+    const newMe = { ...me,
+      myCurrentPageData: { ...myCurrentPageData,
+        pageNotfPref: { ...pageNotfPref,
+          notfLevel: pref.notfLevel,
+        },
+      },
+    };
+    ReactActions.patchTheStore({ me: newMe });
   }, {
     memberId,
     notfLevel: pref.notfLevel,
@@ -860,7 +872,7 @@ export function saveContentNoftPref(memberId: UserId, pref: MyAndInheritedNotfPr
 }
 
 
-export function savePageNoftLevel(newNotfLevel) {
+/*export function savePageNoftLevel(newNotfLevel) {   xx rm
   postJsonSuccess('/-/set-page-notf-level', () => {
     const store: Store = ReactStore.allData();
     const me: Myself = store.me;
@@ -880,7 +892,7 @@ export function savePageNoftLevel(newNotfLevel) {
     pageId: getPageId(),
     pageNotfLevel: newNotfLevel
   });
-}
+} */
 
 
 export function loadMyself(callback: (user: any) => void) {

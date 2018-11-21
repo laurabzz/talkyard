@@ -71,9 +71,10 @@ const NotfsLevelDropdownModal = createComponent({
     this.setState({ isOpen: false, pref: undefined, me: undefined });
   },
 
-  setNotfLevel: function(newLevel) {
+  saveNotfLevel: function(notfLevel) {
+    const me: Myself = this.state.me;
     const pref: MyAndInheritedNotfPref = this.state.pref;
-    Server.saveContentNoftLevel(pref);
+    Server.saveContNotfPrefUpdStore(me.id, { ...pref, notfLevel });
     /*
     if (pref.wholeSite) {
     }
@@ -94,7 +95,6 @@ const NotfsLevelDropdownModal = createComponent({
   render: function() {
     const state = this.state;
     const store: Store = this.state.store;
-    let debug;
     let defaultListItem;
     let everyPostListItem;
     let newTopicsListItem;
@@ -106,51 +106,49 @@ const NotfsLevelDropdownModal = createComponent({
       const pref: MyAndInheritedNotfPref = this.state.pref;
       const currentLevel: NotfLevel = pref.notfLevel;
       dieIf(!pref.pageId && !pref.wholeSite, 'EsE4GK02');   // &&!pref.tagLabel
-      debug =
-          r.pre({}, "Debug:\n" + JSON.stringify(pref));
+      console.log("Debug:\n" + JSON.stringify(pref));
       defaultListItem =
         ExplainingListItem({
           active: !currentLevel,
           title: r.span({ className: 'e_NtfDef' }, t.nl.Default),
           text: pref.anyInheritedNotfPref ?
-              notfLevel_descr(pref.anyInheritedNotfPref) + " because ... I18N" : t.nl.Normal,
-          onSelect: () => this.setNotfLevel(undefined) });
+              notfPref_descr(pref.anyInheritedNotfPref) + " because ... I18N" : t.nl.Normal,
+          onSelect: () => this.saveNotfLevel(null) });
       everyPostListItem =
         ExplainingListItem({
           active: currentLevel === NotfLevel.WatchingAll,
           title: r.span({ className: 'e_NtfAll' }, t.nl.WatchingAll),
-          text: notfLevel_descr({ ...pref, notfLevel: NotfLevel.WatchingAll }),
-          onSelect: () => this.setNotfLevel(NotfLevel.WatchingAll) });
+          text: notfPref_descr({ ...pref, notfLevel: NotfLevel.WatchingAll }),
+          onSelect: () => this.saveNotfLevel(NotfLevel.WatchingAll) });
       newTopicsListItem = pref.pageId ? null :
         ExplainingListItem({
           active: currentLevel === NotfLevel.WatchingFirst,
           title: r.span({ className: 'e_NtfFst' }, t.nl.WatchingFirst),
-          text: notfLevel_descr({ ...pref, notfLevel: NotfLevel.WatchingFirst }),
-          onSelect: () => this.setNotfLevel(NotfLevel.WatchingFirst) });
+          text: notfPref_descr({ ...pref, notfLevel: NotfLevel.WatchingFirst }),
+          onSelect: () => this.saveNotfLevel(NotfLevel.WatchingFirst) });
       normalListItem =
         ExplainingListItem({
           active: currentLevel === NotfLevel.Normal,
           title: r.span({ className: '' }, t.nl.Normal),
           text: t.nl.NormalDescr,
-          onSelect: () => this.setNotfLevel(NotfLevel.Normal) }),
+          onSelect: () => this.saveNotfLevel(NotfLevel.Normal) }),
       hushedListItem =
         ExplainingListItem({
           active: currentLevel === NotfLevel.Hushed,
           title: r.span({ className: '' }, t.nl.Hushed),
           text: t.nl.HushedDescr,
-          onSelect: () => this.setNotfLevel(NotfLevel.Hushed) }),
+          onSelect: () => this.saveNotfLevel(NotfLevel.Hushed) }),
       mutedListItem =
         ExplainingListItem({
           active: currentLevel === NotfLevel.Muted,
           title: r.span({ className: 'e_NtfMtd'  }, t.nl.Muted),
           text: t.nl.MutedTopic,
-          onSelect: () => this.setNotfLevel(NotfLevel.Muted) });
+          onSelect: () => this.saveNotfLevel(NotfLevel.Muted) });
     }
 
     return (
       DropdownModal({ show: state.isOpen, onHide: this.close, atX: state.atX, atY: state.atY,
           pullLeft: true },
-        debug,
         defaultListItem,
         everyPostListItem,
         newTopicsListItem,

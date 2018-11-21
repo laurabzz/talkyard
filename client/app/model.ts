@@ -452,7 +452,9 @@ interface MembersNotfPrefs {
 }
 
 
-interface MyAndInheritedNotfPref {  // RENAME to OwnAndInheritedNotfPref?
+interface MyAndInheritedNotfPref {  // RENAME to OwnAndInheritedNotfPref? no EffectiveContentNotfPref? no EffContNotfPref yes :-) ?
+  // EffectiveContentNotificationPreference  gah!
+  // EffContNotfPref  ok
   notfLevel?: NotfLevel;
   pageId?: PageId;
   pagesInCategoryId?: CategoryId;

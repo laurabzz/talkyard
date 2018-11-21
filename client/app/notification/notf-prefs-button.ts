@@ -22,18 +22,15 @@
    namespace debiki2.notfs {
 //------------------------------------------------------------------------------
 
-const r = ReactDOMFactories;
-
 
 export function NotfPrefButton(props: { pref: MyAndInheritedNotfPref, me: Myself }) {
   return (
-      Button({ className: 'dw-notf-level',
-          title: notfLevel_title(props.pref), onClick: event => {
+      Button({ className: 'dw-notf-level', onClick: event => {
         const rect = cloneEventTargetRect(event);
         Server.loadMoreScriptsBundle(() => {
           notfs['openNotfPrefDropdown'](rect, props);
         });
-      }}));
+      }}, notfPref_title(props.pref)));
 }
 
 

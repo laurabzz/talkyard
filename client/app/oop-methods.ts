@@ -96,7 +96,7 @@ export function siteStatusToString(siteStatus: SiteStatus): string {
 }
 
 
-export function notfLevel_title(notfPref: MyAndInheritedNotfPref): string {
+export function notfPref_title(notfPref: MyAndInheritedNotfPref): string {
   const level = notfPref.notfLevel ? notfPref.notfLevel : (
     notfPref.anyInheritedNotfPref ? notfPref.anyInheritedNotfPref.notfLevel : NotfLevel.Normal);
   switch (level) {
@@ -117,7 +117,7 @@ export function notfLevel_title(notfPref: MyAndInheritedNotfPref): string {
 }
 
 
-function notfLevel_descr(notfPref: MyAndInheritedNotfPref): any {
+export function notfPref_descr(notfPref: MyAndInheritedNotfPref): any {
   const level = notfPref.notfLevel ? notfPref.notfLevel : (
     notfPref.anyInheritedNotfPref ? notfPref.anyInheritedNotfPref.notfLevel : NotfLevel.Normal);
   switch (level) {  // NEXTT

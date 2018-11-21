@@ -635,7 +635,7 @@ class JsonMaker(dao: SiteDao) {
         val ownIdAndGroupIds = tx.loadGroupIdsMemberIdFirst(user)
         val prefsList = tx.loadPageNotfPrefsForMemberId(pageId, ownIdAndGroupIds)
         val prefs = MembersNotfPrefs(user.id, prefsList)
-        JsOwnAndInheritedPageNotfPref(
+        val ownAndInheritedNotfPref = JsOwnAndInheritedPageNotfPref(
           prefs.mySiteNotfLevel, prefs.groupsMaxNotfSitePref, forPageId = Some(pageId))
         /*  NEXTT
         val ownAndInheritedNotfPref = user.anyMemberId.map({ userId =>

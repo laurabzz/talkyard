@@ -1207,6 +1207,7 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
   }
 
 
+  /* xx rm
   def savePageNotfLevel: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser, maxBytes = 500) {
         request =>
     val body = request.body
@@ -1217,18 +1218,24 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
     request.dao.savePageNotfPref(
         PageNotfPref(request.theMember.id, pageId = Some(pageId), notfLevel = newNotfLevel))
     Ok
-  }
+  } */
 
 
   def saveContentNotfPref: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser, maxBytes = 500) {
         request =>
-    import request.dao
+    import request.{dao, theRequester => requester}
     val body = request.body
+    val memberId = (body \ "memberId").as[MemberId]
     val pageId = (body \ "pageId").asOpt[PageId]
     val pagesInCategoryId = (body \ "pagesInCategoryId").asOpt[CategoryId]
     val wholeSite = (body \ "wholeSite").asOpt[Boolean]
-    val newNotfLevelInt = (body \ "pageNotfLevel").asOpt[Int]
+    val newNotfLevelInt = (body \ "notfLevel").asOpt[Int]
     val newNotfLevel = newNotfLevelInt.flatMap(NotfLevel.fromInt)
+
+    throwForbiddenIf(memberId != requester.id && !requester.isStaff, "TyE5HKG205",
+      "May not change other members notf prefs")
+    throwForbiddenIf(memberId == Group.AdminsId && !requester.isAdmin, "TyE4HKW2R7",
+      "May not change admins notf prefs")
 
     val newPref = Try(
       PageNotfPref(
@@ -1237,14 +1244,13 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
         notfLevel = newNotfLevel.getOrElse(NotfLevel.DoesNotMatterHere)))
           .getOrIfFailure(ex => throwBadRequest("TyE2ABKRP0", ex.getMessage))
 
-    newNotfLevel match {
-      case None =>
-        dao.readOnlyTransaction { tx =>
-          tx.deletePageNotfPref(newPref)
-        }
-      case Some(newLevel) =>
-        dao.savePageNotfPref(newPref)
+    if (newNotfLevel.isDefined) {
+      dao.savePageNotfPref(newPref)
     }
+    else {
+      dao.deletePageNotfPref(newPref)
+    }
+
     Ok
   }
 

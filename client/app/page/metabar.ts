@@ -92,7 +92,7 @@ export var Metabar = createComponent({
 
     const notfLevelElem = me.isAuthenticated && !ui.showDetails
       ? r.span({ className: 'dw-page-notf-level', onClick: this.onToggleDetailsClick },
-          t.Notifications + ': ' + notfLevel_title(myPageData.pageNotfPref))
+          t.Notifications + ': ' + notfPref_title(myPageData.pageNotfPref))
       : null;
 
     const toggleDetailsBtn = !me.isLoggedIn ? null :

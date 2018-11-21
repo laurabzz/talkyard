@@ -1233,6 +1233,11 @@ trait UserDao {
   }
 
 
+  def deletePageNotfPref(pageNotfPref: PageNotfPref) {
+    readWriteTransaction(_.deletePageNotfPref(pageNotfPref))
+  }
+
+
   def saveMemberPrivacyPrefs(preferences: MemberPrivacyPrefs, byWho: Who) {
     readWriteTransaction { tx =>
       val memberBefore = tx.loadTheMemberInclDetails(preferences.userId)

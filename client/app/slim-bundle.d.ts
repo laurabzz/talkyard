@@ -280,8 +280,8 @@ declare namespace debiki2 {
     var Avatar;
   }
 
-  function notfLevel_title(notfPref: MyAndInheritedNotfPref): string;
-  function notfLevel_descr(notfPref: MyAndInheritedNotfPref): any;
+  function notfPref_title(notfPref: MyAndInheritedNotfPref): string;
+  function notfPref_descr(notfPref: MyAndInheritedNotfPref): any;
 
   namespace edithistory {
 

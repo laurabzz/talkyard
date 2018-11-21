@@ -122,6 +122,11 @@ pristine: clean
 play-cli: minified-asset-bundles
 	sudo s/d-cli
 
+db-cli:
+	@read -p "Connect to the PostgreSQL database as which user? [talkyard] " dbuser ;\
+	  dbuser="$${dbuser:-talkyard}" ;\
+	  sudo s/d-psql "$$dbuser" "$$dbuser"
+
 up: minified-asset-bundles
 	sudo s/d up -d
 	@echo

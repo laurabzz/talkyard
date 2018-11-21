@@ -185,8 +185,8 @@ var t_en_US: TalkyardTranslations = t = {
     Tracking: "Tracking",
 
     Normal: "Normal",
-    NormalDescr: "You'll be notified if someone talks to you — also indirectly, e.g. someone " +
-        "replies to a reply to your post.",
+    NormalDescr: "You'll be notified if someone talks to you. Also indirectly, e.g. a " +
+        "reply to a reply to you.",
     NormalTopic_1: "You'll be notified if someone talks to you, or mentions your ",
     NormalTopic_2: "@name",
 
