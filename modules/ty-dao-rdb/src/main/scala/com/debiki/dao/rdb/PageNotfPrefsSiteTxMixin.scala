@@ -21,6 +21,8 @@ import com.debiki.core._
 import com.debiki.core.Prelude._
 import java.{sql => js}
 import Rdb._
+import RdbUtil.makeInListFor
+import scala.collection.mutable.ArrayBuffer
 
 
 /** Loads and saves PageNotfPref:s.
@@ -148,9 +150,10 @@ trait PageNotfPrefsSiteTxMixin extends SiteTransaction {
     loadPageNotfPrefsOnSth("pages_in_whole_site", true.asAnyRef)
   }
 
+  /*
   def loadCategoryAndSiteNotfPrefsForMemberId(memberId: MemberId): Seq[PageNotfPref] = {
     loadPageNotfPrefsOnSth("people_id", memberId.asAnyRef, skipPages = true)
-  }
+  }*/
 
   def loadPageNotfPrefsOnSth(thingColumnName: String, thingColumnValue: AnyRef,
         skipPages: Boolean = false): Seq[PageNotfPref] = {
@@ -163,6 +166,43 @@ trait PageNotfPrefsSiteTxMixin extends SiteTransaction {
       """
     val values = List(siteId.asAnyRef, thingColumnValue)
     runQueryFindMany(query, values, readNotfPref)
+  }
+
+
+  def loadPageNotfPrefsForCatsAndSiteForMemberIds(memberIds: Seq[MemberId]): Seq[PageNotfPref] = {
+    loadContentNotfPrefsForMemberIdImpl(pageId = None, memberIds)
+  }
+
+
+  def loadPageNotfPrefsForMemberId(pageId: PageId, memberIds: Seq[MemberId]): Seq[PageNotfPref] = {
+    loadContentNotfPrefsForMemberIdImpl(pageId = Some(pageId), memberIds)
+  }
+
+
+  def loadContentNotfPrefsForMemberIdImpl(pageId: Option[PageId], memberIds: Seq[MemberId])
+        : Seq[PageNotfPref] = {
+    if (memberIds.isEmpty)
+      return Nil
+
+    val values = ArrayBuffer[AnyRef](siteId.asAnyRef)
+    values.appendAll(memberIds.map(_.asAnyRef))
+    val andPageIdClause = pageId match {
+      case None =>
+        "and page_id is null"
+      case Some(id) =>
+        values.append(id)
+        // Need both prefs for the page, and, if missing, for ancestor categories
+        // And if no cat prefs, then for the whole site. So load for pageId,
+        // plus all cats and whole site i.e. no page id.
+        "and (page_id = ? or page_id is null)"
+    }
+    val query = s"""
+      select * from page_notf_prefs3
+      where site_id = ?
+        and people_id in (${makeInListFor(memberIds)})
+        $andPageIdClause
+      """
+    runQueryFindMany(query, values.toList, readNotfPref)
   }
 
 

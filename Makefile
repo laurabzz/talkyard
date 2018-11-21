@@ -137,6 +137,9 @@ restart:
 restart-web-app:
 	sudo s/d-restart-web-app
 
+restart-gulp:
+	sudo s/d kill gulp ; sudo s/d start gulp ; sudo s/d-logsf0
+
 down:
 	sudo s/d down
 

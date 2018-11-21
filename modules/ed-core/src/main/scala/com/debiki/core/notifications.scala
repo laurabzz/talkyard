@@ -263,6 +263,7 @@ case class PageNotfLevels(
 
 
 case class MembersNotfPrefs(
+  memberId: MemberId,
   mySiteNotfLevel: Option[NotfLevel],
   myCategoryNotfLevels: Map[CategoryId, NotfLevel],
   groupsMaxNotfSitePref: Option[PageNotfPref],
@@ -272,6 +273,22 @@ case class MembersNotfPrefs(
 
 case object MembersNotfPrefs {
 
+  def apply(memberId: MemberId, prefs: Seq[PageNotfPref]): MembersNotfPrefs = {
+    val mySitePref = prefs.find(p => p.wholeSite && p.peopleId == memberId)
+    val myCatPrefs = prefs.filter(p => p.pagesInCategoryId.isDefined && p.peopleId == memberId)
+    val myNotfLevelsByCatId =
+      myCatPrefs.groupBy(_.pagesInCategoryId.getOrDie("TyE5BR025")).mapValues(_.head.notfLevel)
+    val groupsMaxNotfSitePref = prefs.filter(p => p.wholeSite && p.peopleId != memberId)
+      .reduceOption((a, b) => if (a.notfLevel.toInt > b.notfLevel.toInt) a else b)
+    new MembersNotfPrefs(
+      memberId,
+      mySiteNotfLevel = mySitePref.map(_.notfLevel),
+      myCategoryNotfLevels = myNotfLevelsByCatId,
+      groupsMaxNotfSitePref = groupsMaxNotfSitePref,
+      groupsMaxCatPrefs = Map.empty)
+  }
+
+  /*
   def apply(myPrefs: Seq[PageNotfPref], groupsPrefs: Seq[PageNotfPref]): MembersNotfPrefs = {
     val mySitePref = myPrefs.find(_.wholeSite)
     val myCatPrefs = myPrefs.filter(_.pagesInCategoryId.isDefined)
@@ -287,6 +304,6 @@ case object MembersNotfPrefs {
       myCategoryNotfLevels = myNotfLevelsByCatId,
       groupsMaxNotfSitePref = groupsMaxNotfSitePref,
       groupsMaxCatPrefs = Map.empty)
-  }
+  } */
 
 }

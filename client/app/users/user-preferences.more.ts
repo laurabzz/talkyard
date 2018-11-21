@@ -500,6 +500,13 @@ export const Notifications = createFactory({
 
         r.pre({}, JSON.stringify(notfPrefs)),
 
+        r.p({}, "Default page notifications, site wide:"),
+        notfs.NotfPrefButton({ pref: notfPrefs.forSite, me }),
+        r.hr(),
+
+        // xx rm
+        r.p({}, "Remove the stuff below excet for the Save btn?"),
+
         Input({ type: 'radio', name: 'ExtraNotfs', className: 'e_notfEveryPost',
           label: t.upp.NotfAboutAll,
           checked: this.state.siteNotfLevel >= NotfLevel.WatchingAll,

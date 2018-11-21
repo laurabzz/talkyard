@@ -1220,6 +1220,35 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
   }
 
 
+  def saveContentNotfPref: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser, maxBytes = 500) {
+        request =>
+    import request.dao
+    val body = request.body
+    val pageId = (body \ "pageId").asOpt[PageId]
+    val pagesInCategoryId = (body \ "pagesInCategoryId").asOpt[CategoryId]
+    val wholeSite = (body \ "wholeSite").asOpt[Boolean]
+    val newNotfLevelInt = (body \ "pageNotfLevel").asOpt[Int]
+    val newNotfLevel = newNotfLevelInt.flatMap(NotfLevel.fromInt)
+
+    val newPref = Try(
+      PageNotfPref(
+        request.theMember.id, pageId = pageId, wholeSite = wholeSite.getOrElse(false),
+        pagesInCategoryId = pagesInCategoryId,
+        notfLevel = newNotfLevel.getOrElse(NotfLevel.DoesNotMatterHere)))
+          .getOrIfFailure(ex => throwBadRequest("TyE2ABKRP0", ex.getMessage))
+
+    newNotfLevel match {
+      case None =>
+        dao.readOnlyTransaction { tx =>
+          tx.deletePageNotfPref(newPref)
+        }
+      case Some(newLevel) =>
+        dao.savePageNotfPref(newPref)
+    }
+    Ok
+  }
+
+
   def loadGroups: Action[Unit] = AdminGetAction { request =>
     val groups = request.dao.readOnlyTransaction { tx =>
       tx.loadGroupsAsSeq()

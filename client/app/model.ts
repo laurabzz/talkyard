@@ -507,10 +507,11 @@ enum NotificationType {
 }
 
 
-interface NotfSubject {
+/*
+interface NotfSubject {  // rm
   tagLabel?: string;
   pageId?: PageId;
-}
+} */
 
 
 interface ReadingProgress {

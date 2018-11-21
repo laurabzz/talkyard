@@ -96,16 +96,66 @@ export function siteStatusToString(siteStatus: SiteStatus): string {
 }
 
 
-export function notfLevel_title(notfLevel: NotfLevel): string {
-  switch (notfLevel) {
+export function notfLevel_title(notfPref: MyAndInheritedNotfPref): string {
+  const level = notfPref.notfLevel ? notfPref.notfLevel : (
+    notfPref.anyInheritedNotfPref ? notfPref.anyInheritedNotfPref.notfLevel : NotfLevel.Normal);
+  switch (level) {
+    case NotfLevel.EveryPostAllEdits: return 'EveryPostAllEdits unimpl';
     case NotfLevel.WatchingAll: return t.nl.WatchingAll;
+    case NotfLevel.TopicProgress: return 'TopicProgress unimpl';
+    case NotfLevel.TopicSolved: return 'TopicSolved unimpl';
     case NotfLevel.WatchingFirst: return t.nl.WatchingFirst;
     case NotfLevel.Tracking: return t.nl.Tracking;
     case NotfLevel.Normal: return t.nl.Normal;
+    case NotfLevel.Hushed: return t.nl.Hushed;
     case NotfLevel.Muted: return t.nl.Muted;
-    default: return "?";
   }
+  // @ifdef DEBUG
+  die('TyE2AKS402');
+  // @endif
+  return '?';
 }
+
+
+function notfLevel_descr(notfPref: MyAndInheritedNotfPref): any {
+  const level = notfPref.notfLevel ? notfPref.notfLevel : (
+    notfPref.anyInheritedNotfPref ? notfPref.anyInheritedNotfPref.notfLevel : NotfLevel.Normal);
+  switch (level) {  // NEXTT
+    case NotfLevel.EveryPostAllEdits:
+      return 'EveryPostAllEdits unimpl';
+    case NotfLevel.WatchingAll:
+      if (notfPref.pageId) return t.nl.WatchingAllTopic;
+      if (notfPref.pagesInCategoryId) return t.nl.WatchingAllCat;
+      //if (???) return t.nl.WatchingAllTag;
+      if (notfPref.wholeSite) return t.nl.WatchingAllSite;
+      break;
+    case NotfLevel.TopicProgress:
+      return 'TopicProgress unimpl';
+    case NotfLevel.TopicSolved:
+      return 'TopicSolved unimpl';
+    case NotfLevel.WatchingFirst:
+      if (notfPref.pagesInCategoryId) return t.nl.WatchingAllCat;
+      //if (???) return t.nl.WatchingAllTag;
+      if (notfPref.wholeSite) return t.nl.WatchingAllSite;
+      // @ifdef DEBUG
+      dieIf(notfPref.pageId, 'TyE7WK20R');
+      // @endif
+      return t.nl.WatchingFirst;
+    case NotfLevel.Tracking:
+      return t.nl.Tracking;
+    case NotfLevel.Normal:
+      return t.nl.NormalDescr;
+    case NotfLevel.Hushed:
+      return t.nl.HushedDescr;
+    case NotfLevel.Muted:
+      return t.nl.MutedTopic;
+  }
+  // @ifdef DEBUG
+  die('TyE2AKS403');
+  // @endif
+  return '?';
+}
+
 
 export function post_isDeleted(post: Post): boolean {   // dupl code [2PKQSB5]
   return post.isPostDeleted || post.isTreeDeleted;

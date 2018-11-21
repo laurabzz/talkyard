@@ -618,32 +618,36 @@ class JsonMaker(dao: SiteDao) {
         watchbar: WatchbarWithTitles, restrictedCategories: JsArray,
         restrictedTopics: Seq[JsValue], restrictedTopicsUsers: Seq[JsObject],
         permissions: Seq[PermsOnPages], unapprovedPostAuthorIds: Set[UserId],
-        transaction: SiteTransaction): JsObject = {
+        tx: SiteTransaction): JsObject = {
 
     // Bug: If !isAdmin, might count [review tasks one cannot see on the review page]. [5FSLW20]
     val reviewTasksAndCounts =
-      if (user.isStaff) transaction.loadReviewTaskCounts(user.isAdmin)
+      if (user.isStaff) tx.loadReviewTaskCounts(user.isAdmin)
       else ReviewTaskCounts(0, 0)
 
     // dupl line [8AKBR0]
-    val notfsAndCounts = loadNotifications(user.id, transaction, unseenFirst = true, limit = 20)
+    val notfsAndCounts = loadNotifications(user.id, tx, unseenFirst = true, limit = 20)
 
     val (ownAndInheritedNotfPref, votes, unapprovedPosts, unapprovedAuthors) =
       anyPageId map { pageId =>
         // NEXT
-        //  val prefs = dao.loadMembersNotfPrefs(member)
-        //  JsOwnAndInheritedPageNotfPref(
-        //  prefs.mySiteNotfLevel, prefs.groupsMaxNotfSitePref, forPageId = Some(..))
+        // A little bit dupl code [6RBRQ204]
+        val ownIdAndGroupIds = tx.loadGroupIdsMemberIdFirst(user)
+        val prefsList = tx.loadPageNotfPrefsForMemberId(pageId, ownIdAndGroupIds)
+        val prefs = MembersNotfPrefs(user.id, prefsList)
+        JsOwnAndInheritedPageNotfPref(
+          prefs.mySiteNotfLevel, prefs.groupsMaxNotfSitePref, forPageId = Some(pageId))
+        /*  NEXTT
         val ownAndInheritedNotfPref = user.anyMemberId.map({ userId =>
-          val notfLevels = transaction.loadPageNotfLevels(userId, pageId = pageId,
+          val notfLevels = tx.loadPageNotfLevels(userId, pageId = pageId,
             // Per category notfs not impl [7KBR2AF5]  [REFACTORNOTFS]
             categoryId = None)
           pageNotfLevelsToJson(notfLevels)
-        }) getOrElse JsEmptyObj
-        val votes = votesJson(user.id, pageId, transaction)
+        }) getOrElse JsEmptyObj */
+        val votes = votesJson(user.id, pageId, tx)
         // + flags, interesting for staff, & so people won't attempt to flag twice [7KW20WY1]
         val (postsJson, postAuthorsJson) =
-          unapprovedPostsAndAuthorsJson(user, pageId, unapprovedPostAuthorIds, transaction)
+          unapprovedPostsAndAuthorsJson(user, pageId, unapprovedPostAuthorIds, tx)
         (ownAndInheritedNotfPref, votes, postsJson, postAuthorsJson)
       } getOrElse (JsEmptyObj, JsEmptyObj, JsEmptyObj, JsArray())
 
@@ -655,7 +659,7 @@ class JsonMaker(dao: SiteDao) {
         ThreatLevel.HopefullySafe
     }
 
-    val anyReadingProgress = anyPageId.flatMap(transaction.loadReadProgress(user.id, _))
+    val anyReadingProgress = anyPageId.flatMap(tx.loadReadProgress(user.id, _))
     val anyReadingProgressJson = anyReadingProgress.map(makeReadingProgressJson).getOrElse(JsNull)
 
     val userDataByPageId = anyPageId match {
@@ -716,7 +720,7 @@ class JsonMaker(dao: SiteDao) {
       "marksByPostId" -> JsObject(Nil))
 
     if (user.isAdmin) {
-      val siteSettings = transaction.loadSiteSettings()
+      val siteSettings = tx.loadSiteSettings()
       json += "isEmbeddedCommentsSite" -> JsBoolean(siteSettings.exists(_.allowEmbeddingFrom.nonEmpty))
     }
 
@@ -1346,7 +1350,7 @@ object JsonMaker {
   }
 
 
-  private def pageNotfLevelsToJson(notfLevels: PageNotfLevels): JsObject = {
+  private def pageNotfLevelsToJson(notfLevels: PageNotfLevels): JsObject = {  // xx rm
     Json.obj(
       "notfLevel" -> JsNumber(notfLevels.effectiveNotfLevel.getOrElse(NotfLevel.Normal).toInt), // remove?
       "pageNotfLevel" -> JsNumberOrNull(notfLevels.forPage.map(_.toInt)),

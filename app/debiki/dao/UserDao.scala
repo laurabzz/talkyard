@@ -1393,10 +1393,16 @@ trait UserDao {
   def loadMembersNotfPrefs(member: User, anyTx: Option[SiteTransaction] = None)
         : MembersNotfPrefs = {
     readOnlyTransactionMaybeReuse(anyTx) { tx =>
+      /*
       val ancestorGroupIds = tx.loadGroupIdsMemberIdFirst(member).drop(1)
       val myPrefs = tx.loadCategoryAndSiteNotfPrefsForMemberId(member.id)
       val groupsPrefs = ancestorGroupIds.flatMap(tx.loadCategoryAndSiteNotfPrefsForMemberId)
-      MembersNotfPrefs(myPrefs, groupsPrefs = groupsPrefs)
+      MembersNotfPrefs(myPrefs, groupsPrefs = groupsPrefs) */
+
+      // A little bit dupl code [6RBRQ204]
+      val ownIdAndGroupIds = tx.loadGroupIdsMemberIdFirst(member)
+      val prefs = tx.loadPageNotfPrefsForCatsAndSiteForMemberIds(ownIdAndGroupIds)
+      MembersNotfPrefs(member.id, prefs)
     }
   }
 

@@ -848,6 +848,18 @@ export function lockThreatLevel(userId: UserId, threatLevel: ThreatLevel, succes
 }
 
 
+export function saveContentNoftPref(memberId: UserId, pref: MyAndInheritedNotfPref) {
+  postJsonSuccess('/-/save-content-notf-pref', () => {
+  }, {
+    memberId,
+    notfLevel: pref.notfLevel,
+    pageId: pref.pageId,
+    pagesInCategoryId: pref.pagesInCategoryId,
+    wholeSite: pref.wholeSite,
+  });
+}
+
+
 export function savePageNoftLevel(newNotfLevel) {
   postJsonSuccess('/-/set-page-notf-level', () => {
     const store: Store = ReactStore.allData();

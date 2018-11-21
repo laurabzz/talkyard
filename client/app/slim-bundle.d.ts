@@ -126,6 +126,10 @@ declare namespace debiki2 {
   function replaceById(itemsWithId: any[], replacement);
   function deleteById(itemsWithId: any[], id);
 
+  namespace notfs {
+    function NotfPrefButton(props: { pref: MyAndInheritedNotfPref, me: Myself });
+  }
+
   namespace utils {
     var scrollIntoViewInPageColumn;
     function makeMountNode();
@@ -276,8 +280,8 @@ declare namespace debiki2 {
     var Avatar;
   }
 
-  // should move to more-bundle.js.
-  var notfLevel_title;
+  function notfLevel_title(notfPref: MyAndInheritedNotfPref): string;
+  function notfLevel_descr(notfPref: MyAndInheritedNotfPref): any;
 
   namespace edithistory {
 

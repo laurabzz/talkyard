@@ -15,10 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/// <reference path="../ReactStore.ts" />
-/// <reference path="../react-elements/name-login-btns.ts" />
-/// <reference path="../utils/DropdownModal.ts" />
-/// <reference path="../util/ExplainingDropdown.ts" />
 /// <reference path="../widgets.ts" />
 /// <reference path="../oop-methods.ts" />
 
@@ -31,11 +27,12 @@ const r = ReactDOMFactories;
 
 export function NotfPrefButton(props: { pref: MyAndInheritedNotfPref, me: Myself }) {
   return (
-      Button({ id: '7bw3gz5', className: 'dw-notf-level', onClick: event => {
-          Server.loadMoreScriptsBundle(() => {
-            notfs['openNotfPrefDropdown'](event.target, props);
-            //, { pageId: store.currentPageId }, notfLevel);
-          });
+      Button({ className: 'dw-notf-level',
+          title: notfLevel_title(props.pref), onClick: event => {
+        const rect = cloneEventTargetRect(event);
+        Server.loadMoreScriptsBundle(() => {
+          notfs['openNotfPrefDropdown'](rect, props);
+        });
       }}));
 }
 

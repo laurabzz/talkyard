@@ -121,8 +121,11 @@ var TagTableRow = createComponent({
         subscribersColumn,
         mutedColumn,
         r.td({},
+          "Unimplemented [2ABRP05F]")));
+          /*notfs.NotfPrefButton({ pref, me: Myself }),
           notification.NotfLevelButton_oldForTags({ subject: { tagLabel: tagAndStats.label },
               notfLevel: tagNotfLevel }))));
+              */
   }
 });
 
