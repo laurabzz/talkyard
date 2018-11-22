@@ -1221,7 +1221,7 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
   } */
 
 
-  def saveContentNotfPref: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser, maxBytes = 500) {
+  def saveContentNotfPref: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser, maxBytes = 500) {  // [7RBP24]
         request =>
     import request.{dao, theRequester => requester}
     val body = request.body
@@ -1331,26 +1331,26 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
   }
 
 
-  def loadMemberNotfPrefs(memberId: Int): Action[Unit] = GetAction { request =>
+  def loadMembersCatsTagsSiteNotfPrefs(memberId: Int): Action[Unit] = GetAction { request =>
     import request.{dao, theRequester => requester}
     throwForbiddenIf(memberId != requester.id && !requester.isAdmin,
         "TyE4RBSK8FG", "May not view someone elses notf prefs")
     throwForbiddenIf(memberId <= MaxGuestId,
         "TyE7WRG04RS2", "Guests cannot have notf prefs")
     val member = dao.getTheUser(memberId)
-    val prefs = dao.loadMembersNotfPrefs(member)
+    val prefs = dao.loadMembersCatsTagsSiteNotfPrefs(member)
     //val groupsById = ...
     OkSafeJson(Json.obj(
-      "notfPrefs" -> membersNotfPrefsToJson(prefs))
+      "catsTagsSiteNotfPrefs" -> membersNotfPrefsToJson(prefs))
       //later: "categoryNamesById" -> ...,
       // "groupNamesById" ->  ..., needed for rendering prefs
       )
   }
 
 
-  def membersNotfPrefsToJson(prefs: MembersNotfPrefs): JsObject = {
-    val myCatPrefs = JsObject(prefs.myCategoryNotfLevels.map(
-      kv => kv._1.toString -> JsNumber(kv._2.toInt)))
+  def membersNotfPrefsToJson(prefs: OwnAndGropsContNotfPrefs): JsObject = {
+    //val myCatPrefs = JsObject(prefs.ownPrefsByCatId.map(
+    //  kv => kv._1.toString -> JsNumber(kv._2.toInt)))
     /*val groupSitePerf: JsValue = prefs.groupsMaxNotfSitePref.map(JsPageNotfPref).getOrElse(JsNull)
     Json.obj(  // MembersNotfPrefs
       "mySiteNotfLevel" -> JsNumberOrNull(prefs.mySiteNotfLevel.map(_.toInt)),
@@ -1358,10 +1358,9 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
       "groupsMaxNotfSitePref" -> groupSitePerf,
       "groupsMaxCatPrefs" -> JsObject(Nil)) */
 
-    Json.obj( // MembersNotfPrefs
-      "forSite" -> JsOwnAndInheritedPageNotfPref(
-          prefs.mySiteNotfLevel, prefs.groupsMaxNotfSitePref, forWholeSite = true),
-      "forCategoriesById" -> Json.obj())
+    Json.obj( // CatsAndSiteNotfPrefs
+      "forSite" -> JsEffSiteNotfPref(prefs),
+      "forCatsById" -> Json.obj())
   }
 
 
@@ -1557,7 +1556,7 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
   }
 
 
-  private def notfPrefsToSaveFromJson(json: JsValue): NotfPrefsToSave = {
+  private def notfPrefsToSaveFromJson(json: JsValue): NotfPrefsToSave = {   // xx rm, use instead: [7RBP24]
     val anyNewSiteNotfLevelInt = (json \ "siteNotfLevel").asOpt[Int]
     NotfPrefsToSave(
       memberId = (json \ "memberId").as[MemberId],

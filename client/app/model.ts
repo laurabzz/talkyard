@@ -439,18 +439,17 @@ interface PageUserSettings {
 }
 
 
-interface MembersNotfPrefs {
-  forSite: MyAndInheritedNotfPref;
-  forCategoriesById: { [categoryId: number]: MyAndInheritedNotfPref };
+interface CatsTagsSiteNotfPrefs {
+  forCatsById: { [categoryId: number]: MyAndInheritedNotfPref };
   //forTagsById: ...
-
-  /*
-  //mySiteNotfLevel: number;
-  //myCategoryNotfLevels: any;
-  //groupsMaxNotfSitePref: any;
-  //groupsMaxCatPrefs: any; */
+  forSite: MyAndInheritedNotfPref;
 }
 
+
+interface EffNotfPref {
+  notfLevel?: NotfLevel;
+  inheritedPref?: PageNotfPref;
+}
 
 interface MyAndInheritedNotfPref {  // RENAME to OwnAndInheritedNotfPref? no EffectiveContentNotfPref? no EffContNotfPref yes :-) ?
   // EffectiveContentNotificationPreference  gah!
@@ -1542,8 +1541,9 @@ interface ListDraftsResponse {
   pageTitlesById: { [pageId: string]: string };
 }
 
-interface MembersNotfPrefsResponse {
-  notfPrefs: MembersNotfPrefs,
+interface CatsTagsSiteNotfPrefsResponse {
+  catsTagsSiteNotfPrefs: CatsTagsSiteNotfPrefs,
+  // Later: Category and group names, so can lookup ther names, for display.
 }
 
 

@@ -540,7 +540,7 @@ object ForumDao {
 
   private val SampleIdeaTitle = "Sample idea"
   private val SampleIdeaText = {
-    val para1 = o"""This is an example idea. Click the idea icon to the left of the title
+    val para1 = o"""This is a sample idea. Click the idea icon to the left of the title
       (i.e. <span class="icon-idea"></span>)
       to change status from New Idea, to Planned-to-do, to Doing-now, to Done."""
     val para2 = o"""In the topic list, everyone sees the status of the idea at a glance
@@ -563,7 +563,7 @@ object ForumDao {
 
   private val SampleQuestionTitle = "Sample question"
   private val SampleQuestionText = {
-    val para1 = o"""This is an example question. Click "Solution" below to accept an answer.
+    val para1 = o"""This is an sample question. Click "Solution" below to accept an answer.
       In the topic list, everyone sees that this is a question, and if it's new
       (the <span class="icon-help-circled"></span> icon), or if it's been answered (
       the <span class="icon-ok-circled-empty"></span> icon)."""

@@ -231,13 +231,13 @@ object NotfLevel {
   * @param pagesInCategoryId — the settings apply to all pages in this category.
   * @param wholeSite — the group's or member's default settings for pages across the whole site
   */
-case class PageNotfPref(   // ? RENAME to NotfPrefAboutContent?  (will also be an ...AboutGroup) or don't?
+case class PageNotfPref(   // ? RENAME to ContNotfPref?  No: NotfPrefAboutContent?  (will also be an ...AboutGroup) or don't?
   peopleId: UserId,  // RENAME to memberId, + db column.  [pps]
   notfLevel: NotfLevel,
-  pageId: Option[PageId] = None,
-  pagesInCategoryId: Option[CategoryId] = None,  // not yet impl [7KBR2AF5]
+  pageId: Option[PageId] = None,   // RENAME to forPageId
+  pagesInCategoryId: Option[CategoryId] = None,  // not yet impl [7KBR2AF5]   // RENAME to forCategoryId
   //pagesWithTagLabelId: Option[TagLabelId] = None, — later
-  wholeSite: Boolean = false) {
+  wholeSite: Boolean = false) {    // RENAME to forWholeSite
 
   require(pageId.isDefined.toZeroOne + pagesInCategoryId.isDefined.toZeroOne +
     wholeSite.toZeroOne == 1, "TyE2BKP053")
@@ -248,7 +248,7 @@ case class PageNotfPref(   // ? RENAME to NotfPrefAboutContent?  (will also be a
 }
 
 
-case class PageNotfLevels(
+case class PageNotfLevels(   // xx rm
   forPage: Option[NotfLevel] = None,
   forCategory: Option[NotfLevel] = None,
   forWholeSite: Option[NotfLevel] = None) {
@@ -262,30 +262,85 @@ case class PageNotfLevels(
 }
 
 
-case class MembersNotfPrefs(
+/**
+  * @param ownPageNotfLevel Any notf level one has set, directly on the page or category (or whole site).
+  * @param inheritedPref Inherited from groups one is in, or from one's own category setting, if
+  *                      is for a page.
+  */
+case class EffPageNotfPref(
+  pageId: PageId,
+  ownPageNotfLevel: Option[NotfLevel],
+  inheritedPref: Option[PageNotfPref])
+
+case class EffSiteNotfPref(
+  ownSitePref: Option[PageNotfPref],
+  inheritedPref: Option[PageNotfPref])
+
+case class OwnAndGropsContNotfPrefs(
   memberId: MemberId,
-  mySiteNotfLevel: Option[NotfLevel],
-  myCategoryNotfLevels: Map[CategoryId, NotfLevel],
-  groupsMaxNotfSitePref: Option[PageNotfPref],
-  groupsMaxCatPrefs: Map[CategoryId, PageNotfPref]) {
+  ownPrefsByPageId: Map[PageId, PageNotfPref],
+  ownPrefsByCatId: Map[CategoryId, PageNotfPref],
+  ownSitePref: Option[PageNotfPref],
+  groupsMaxPrefsByPageId: Map[PageId, PageNotfPref],
+  groupsMaxPrefsByCatId: Map[CategoryId, PageNotfPref],
+  groupsMaxSitePref: Option[PageNotfPref]) {
+
+  def maxOwnCatLevel: Option[PageNotfPref] =
+    ownPrefsByCatId.valuesIterator.reduceOption(
+      (a, b) => if (a.notfLevel.toInt > b.notfLevel.toInt) a else b)
+
+  def maxGroupsCatLevel: Option[PageNotfPref] =
+    groupsMaxPrefsByCatId.valuesIterator.reduceOption(
+      (a, b) => if (a.notfLevel.toInt > b.notfLevel.toInt) a else b)
+
+  def effPageNotfPref(pageId: PageId): EffPageNotfPref = {
+    dieIf(ownPrefsByPageId.size > 1, "TyE4ABRT02")
+    dieIf(groupsMaxPrefsByPageId.size > 1, "TyE4ABRT03")
+    var inheritedPref = groupsMaxPrefsByPageId.get(pageId)
+    if (inheritedPref.isEmpty) {
+      val myCatPref = maxOwnCatLevel
+      if (myCatPref.isDefined) inheritedPref = myCatPref
+    }
+    if (inheritedPref.isEmpty) {
+      val groupsCatLevel = maxGroupsCatLevel
+      if (groupsCatLevel.isDefined) inheritedPref = groupsCatLevel
+    }
+    if (inheritedPref.isEmpty && ownSitePref.isDefined) {
+      inheritedPref = ownSitePref
+    }
+    if (inheritedPref.isEmpty && groupsMaxSitePref.isDefined) {
+      inheritedPref = groupsMaxSitePref
+    }
+    EffPageNotfPref(
+        pageId, ownPageNotfLevel = ownPrefsByPageId.get(pageId).map(_.notfLevel), inheritedPref)
+  }
+
 }
 
 
-case object MembersNotfPrefs {
+case object OwnAndGropsContNotfPrefs {
 
-  def apply(memberId: MemberId, prefs: Seq[PageNotfPref]): MembersNotfPrefs = {
-    val mySitePref = prefs.find(p => p.wholeSite && p.peopleId == memberId)
+  def apply(memberId: MemberId, prefs: Seq[PageNotfPref]): OwnAndGropsContNotfPrefs = {
+    val myPagePrefs = prefs.filter(p => p.pageId.isDefined && p.peopleId == memberId)
+    val ownPrefsByPageId =
+      myPagePrefs.groupBy(_.pageId.getOrDie("TyE5BR025")).mapValues(_.head)
+
     val myCatPrefs = prefs.filter(p => p.pagesInCategoryId.isDefined && p.peopleId == memberId)
-    val myNotfLevelsByCatId =
-      myCatPrefs.groupBy(_.pagesInCategoryId.getOrDie("TyE5BR025")).mapValues(_.head.notfLevel)
-    val groupsMaxNotfSitePref = prefs.filter(p => p.wholeSite && p.peopleId != memberId)
+    val ownPrefsByCatId =
+      myCatPrefs.groupBy(_.pagesInCategoryId.getOrDie("TyE5BR025")).mapValues(_.head)
+
+    val ownSitePref = prefs.find(p => p.wholeSite && p.peopleId == memberId)
+
+    val groupsMaxSitePref = prefs.filter(p => p.wholeSite && p.peopleId != memberId)
       .reduceOption((a, b) => if (a.notfLevel.toInt > b.notfLevel.toInt) a else b)
-    new MembersNotfPrefs(
+    new OwnAndGropsContNotfPrefs(
       memberId,
-      mySiteNotfLevel = mySitePref.map(_.notfLevel),
-      myCategoryNotfLevels = myNotfLevelsByCatId,
-      groupsMaxNotfSitePref = groupsMaxNotfSitePref,
-      groupsMaxCatPrefs = Map.empty)
+      ownPrefsByPageId = ownPrefsByPageId,
+      ownPrefsByCatId = ownPrefsByCatId,
+      ownSitePref = ownSitePref,
+      groupsMaxPrefsByPageId = Map.empty,
+      groupsMaxPrefsByCatId = Map.empty,
+      groupsMaxSitePref = groupsMaxSitePref)
   }
 
   /*

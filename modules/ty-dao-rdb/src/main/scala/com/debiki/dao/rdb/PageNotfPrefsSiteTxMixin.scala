@@ -99,7 +99,7 @@ trait PageNotfPrefsSiteTxMixin extends SiteTransaction {
   }
 
 
-  def loadPageNotfLevels(peopleId: UserId, pageId: PageId, categoryId: Option[CategoryId])
+  def loadPageNotfLevels(peopleId: UserId, pageId: PageId, categoryId: Option[CategoryId])  // xx rm
         : PageNotfLevels = {
     def selectNotfLevelWhere(what: Int) = s"""
       select notf_level, $what as what
@@ -169,17 +169,17 @@ trait PageNotfPrefsSiteTxMixin extends SiteTransaction {
   }
 
 
-  def loadPageNotfPrefsForCatsAndSiteForMemberIds(memberIds: Seq[MemberId]): Seq[PageNotfPref] = {
-    loadContentNotfPrefsForMemberIdImpl(pageId = None, memberIds)
+  def loadNotfPrefsForMemberAboutCatsAndSite(memberIds: Seq[MemberId]): Seq[PageNotfPref] = {
+    loadContentNotfPrefsForMemberImpl(pageId = None, memberIds)
   }
 
 
-  def loadPageNotfPrefsForMemberId(pageId: PageId, memberIds: Seq[MemberId]): Seq[PageNotfPref] = {
-    loadContentNotfPrefsForMemberIdImpl(pageId = Some(pageId), memberIds)
+  def loadNotfPrefsForMemberAboutPage(pageId: PageId, memberIds: Seq[MemberId]): Seq[PageNotfPref] = {
+    loadContentNotfPrefsForMemberImpl(pageId = Some(pageId), memberIds)
   }
 
 
-  def loadContentNotfPrefsForMemberIdImpl(pageId: Option[PageId], memberIds: Seq[MemberId])
+  def loadContentNotfPrefsForMemberImpl(pageId: Option[PageId], memberIds: Seq[MemberId])
         : Seq[PageNotfPref] = {
     if (memberIds.isEmpty)
       return Nil

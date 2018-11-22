@@ -123,9 +123,13 @@ play-cli: minified-asset-bundles
 	sudo s/d-cli
 
 db-cli:
-	@read -p "Connect to the PostgreSQL database as which user? [talkyard] " dbuser ;\
-	  dbuser="$${dbuser:-talkyard}" ;\
-	  sudo s/d-psql "$$dbuser" "$$dbuser"
+	@# Find out which database is currently being used, by looking at my.conf.
+	@# Because I sometimes connect as the wrong user, and feel confused for quite a while.
+	@def_user=`sed -nr 's/^talkyard.postgresql.user="([a-zA-Z0-9\._-]+)".*/\1/p' conf/my.conf`  ;\
+	  def_user="$${def_user:-talkyard}" ;\
+	  read -p "Connect to the PostgreSQL database as which user? [$$def_user] " db_user ;\
+	  db_user="$${db_user:-$$def_user}" ;\
+	  sudo s/d-psql "$$db_user" "$$db_user"
 
 up: minified-asset-bundles
 	sudo s/d up -d

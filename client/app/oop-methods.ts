@@ -120,7 +120,7 @@ export function notfPref_title(notfPref: MyAndInheritedNotfPref): string {
 export function notfPref_descr(notfPref: MyAndInheritedNotfPref): any {
   const level = notfPref.notfLevel ? notfPref.notfLevel : (
     notfPref.anyInheritedNotfPref ? notfPref.anyInheritedNotfPref.notfLevel : NotfLevel.Normal);
-  switch (level) {  // NEXTT
+  switch (level) {
     case NotfLevel.EveryPostAllEdits:
       return 'EveryPostAllEdits unimpl';
     case NotfLevel.WatchingAll:

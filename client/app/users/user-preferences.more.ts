@@ -63,11 +63,11 @@ export const UserPreferences = createFactory({
     const childRoute = Switch({},
       Route({ path: prefsPathSlash, exact: true, render: ({ match }) =>
           Redirect({ to: aboutPath + location.search + location.hash })}),
-      Route({ path: '(.*)/' + aboutPathSeg, exact: true, render: () => AboutUser(childProps) }),
-      Route({ path: '(.*)/' + notfsPathSeg, exact: true, render: () => Notifications(childProps) }),
-      Route({ path: '(.*)/' + privacyPathSeg, exact: true, render: () => Privacy(childProps) }),
+      Route({ path: '(.*)/' + aboutPathSeg, exact: true, render: () => AboutTab(childProps) }),
+      Route({ path: '(.*)/' + notfsPathSeg, exact: true, render: () => NotfPrefsTab(childProps) }),
+      Route({ path: '(.*)/' + privacyPathSeg, exact: true, render: () => PrivacyPrefsTab(childProps) }),
       Route({ path: '(.*)/' + accountPathSeg, exact: true, render: (ps) =>
-          Account({ ...childProps, ...ps }) }));
+          AccountTab({ ...childProps, ...ps }) }));
 
     const isGuest = user_isGuest(user);
     const isBuiltInUser = user.id < LowestAuthenticatedUserId;
@@ -93,8 +93,8 @@ export const UserPreferences = createFactory({
 
 
 
-export const AboutUser = createFactory({
-  displayName: 'AboutUser',
+export const AboutTab = createFactory({
+  displayName: 'AboutTab',
 
   render: function() {
     const store: Store = this.props.store;
@@ -431,8 +431,8 @@ const AboutMember = createComponent({
 
 
 
-export const Notifications = createFactory({
-  displayName: 'Notifications',
+const NotfPrefsTab = createFactory({
+  displayName: 'NotfPrefsTab',
 
   getInitialState: function() {
     const user: MemberInclDetails = this.props.user;
@@ -452,13 +452,13 @@ export const Notifications = createFactory({
   },
 
   loadNotfPrefs: function(memberId) {
-    Server.loadMembersNotfPrefs(memberId, (response: MembersNotfPrefsResponse) => {
+    Server.loadCatsTagsSiteNotfPrefs(memberId, (response: CatsTagsSiteNotfPrefsResponse) => {
       if (this.isGone) return;
-      this.setState({ notfPrefs: response.notfPrefs });
+      this.setState({ catsTagsSiteNotfPrefs: response.catsTagsSiteNotfPrefs });
     });
   },
 
-  saveNotfPrefs: function(event) {
+  /*saveNotfPrefs: function(event) {
     event.preventDefault();
     const user: MemberInclDetails = this.props.user;
     const prefs = {
@@ -474,26 +474,29 @@ export const Notifications = createFactory({
         savingStatus: 'Saved',
         showUsernameInput: false,
       });
-      this.props.reloadUser(false);
+      this.loadNotfPrefs(user.id);
     });
     this.setState({ savingStatus: 'Saving' });
-  },
+  }, */
 
   render: function() {
     const store: Store = this.props.store;
     const me: Myself = store.me;
     const user: MemberInclDetails = this.props.user;
     const isSystemUser = user.id === SystemUserId;
-    const notfPrefs: MembersNotfPrefs = this.state.notfPrefs;
+    const notfPrefs: CatsTagsSiteNotfPrefs = this.state.catsTagsSiteNotfPrefs;
 
-    // Dupl Saving... code [7UKBQT2]
+    if (!notfPrefs)
+      return r.p({}, t.Loading);
+
+    /* Dupl Saving... code [7UKBQT2]
     let savingInfo = null;
     if (this.state.savingStatus === 'Saving') {
       savingInfo = r.i({}, ' ' + t.SavingDots);
     }
     else if (this.state.savingStatus === 'Saved') {
       savingInfo = r.i({ className: 'e_Saved' }, ' ' + t.SavedDot);
-    }
+    } */
 
     return (
       r.form({ role: 'form', onSubmit: this.savePrefs },
@@ -502,9 +505,8 @@ export const Notifications = createFactory({
 
         r.p({}, "Default page notifications, site wide:"),
         notfs.NotfPrefButton({ pref: notfPrefs.forSite, me }),
-        r.hr(),
 
-        // xx rm
+        /* xx rm
         r.p({}, "Remove the stuff below excet for the Save btn?"),
 
         Input({ type: 'radio', name: 'ExtraNotfs', className: 'e_notfEveryPost',
@@ -525,7 +527,8 @@ export const Notifications = createFactory({
         isSystemUser ? null :
           InputTypeSubmit({ clasName: 'e_NtfPfs_SvB', value: t.Save }),
 
-        savingInfo));
+        savingInfo*/
+        ));
 
     /* Discoruse's email options:
     'When you do not visit the site, send an email digest of what is new:'
@@ -539,8 +542,8 @@ export const Notifications = createFactory({
 
 
 
-export const Privacy = createFactory({
-  displayName: 'Privacy',
+const PrivacyPrefsTab = createFactory({
+  displayName: 'PrivacyPrefsTab',
 
   getInitialState: function() {
     const user: MemberInclDetails = this.props.user;
@@ -616,8 +619,8 @@ export const Privacy = createFactory({
 
 
 
-export const Account = createFactory({
-  displayName: 'Account',
+const AccountTab = createFactory({
+  displayName: 'AccountTab',
 
   getInitialState: function() {
     return {

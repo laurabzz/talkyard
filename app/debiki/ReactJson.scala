@@ -633,11 +633,12 @@ class JsonMaker(dao: SiteDao) {
         // NEXT
         // A little bit dupl code [6RBRQ204]
         val ownIdAndGroupIds = tx.loadGroupIdsMemberIdFirst(user)
-        val prefsList = tx.loadPageNotfPrefsForMemberId(pageId, ownIdAndGroupIds)
-        val prefs = MembersNotfPrefs(user.id, prefsList)
-        val ownAndInheritedNotfPref = JsOwnAndInheritedPageNotfPref(
-          prefs.mySiteNotfLevel, prefs.groupsMaxNotfSitePref, forPageId = Some(pageId))
-        /*  NEXTT
+        val prefsList = tx.loadNotfPrefsForMemberAboutPage(pageId, ownIdAndGroupIds)
+        val ownAndGroupPrefs = OwnAndGropsContNotfPrefs(user.id, prefsList)
+        val effPrefs = ownAndGroupPrefs.effPageNotfPref(pageId)
+        val effPagePrefJson = JsEffPageNotfPref(effPrefs)
+          //prefs.mySiteNotfLevel, prefs.groupsMaxSiteNotfPref, forPageId = Some(pageId))
+        /*
         val ownAndInheritedNotfPref = user.anyMemberId.map({ userId =>
           val notfLevels = tx.loadPageNotfLevels(userId, pageId = pageId,
             // Per category notfs not impl [7KBR2AF5]  [REFACTORNOTFS]
@@ -648,7 +649,7 @@ class JsonMaker(dao: SiteDao) {
         // + flags, interesting for staff, & so people won't attempt to flag twice [7KW20WY1]
         val (postsJson, postAuthorsJson) =
           unapprovedPostsAndAuthorsJson(user, pageId, unapprovedPostAuthorIds, tx)
-        (ownAndInheritedNotfPref, votes, postsJson, postAuthorsJson)
+        (effPagePrefJson, votes, postsJson, postAuthorsJson)
       } getOrElse (JsEmptyObj, JsEmptyObj, JsEmptyObj, JsArray())
 
     val threatLevel = user match {
@@ -1839,24 +1840,24 @@ object JsX {
       "text" -> JsString(draft.text))
   }
 
-  def JsOwnAndInheritedPageNotfPref(
-        myNotfLevel: Option[NotfLevel],
-        inheritedPref: Option[PageNotfPref],
-        forPageId: Option[PageId] = None,
-        forCategoryId: Option[CategoryId] = None,
-        forWholeSite: Boolean = false): JsObject = {
-    val inheritedPrefJson: JsValue = inheritedPref.map(JsPageNotfPref).getOrElse(JsNull)
-    Json.obj(  // MyAndInheritedNotfPref
-      "notfLevel" -> JsNumberOrNull(myNotfLevel.map(_.toInt)),
-      "pageId" -> JsStringOrNull(forPageId),
-      "pagesInCategoryId" -> JsNumberOrNull(forCategoryId),
-      "wholeSite" -> (if (forWholeSite) JsTrue else JsNull),
-      "inheritedPref" -> inheritedPrefJson)
+  def JsEffPageNotfPref(pref: EffPageNotfPref): JsValue = {
+    val inheritedPref: JsValue = pref.inheritedPref.map(JsPageNotfPref).getOrElse(JsNull)
+    Json.obj(  // MyAndInheritedNotfPref  RENAME to EffPageNotfPref ?
+      "pageId" -> JsString(pref.pageId),
+      "notfLevel" -> JsNumberOrNull(pref.ownPageNotfLevel.map(_.toInt)),
+      "inheritedPref" -> inheritedPref)
   }
 
+  def JsEffSiteNotfPref(pref: OwnAndGropsContNotfPrefs): JsValue = {
+    val inheritedPref = pref.groupsMaxSitePref.map(JsPageNotfPref).getOrElse(JsNull)
+    Json.obj(
+      "wholeSite" -> JsTrue,
+      "notfLevel" -> JsNumberOrNull(pref.ownSitePref.map(_.notfLevel.toInt)),
+      "inheritedPref" -> inheritedPref)
+  }
 
   def JsPageNotfPref(notfPref: PageNotfPref): JsObject = {
-    Json.obj(  // PageNotfPref
+    Json.obj(  // PageNotfPref   ? RENAME to ContNotfPref, + fields too, see Scala class
       "memberId" -> notfPref.peopleId,
       "notfLevel" -> notfPref.notfLevel.toInt,
       "pageId" -> notfPref.pageId,

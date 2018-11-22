@@ -954,9 +954,9 @@ export function saveAboutUserPrefs(prefs, isGroup: boolean, success: () => void)
 }
 
 
-export function loadMembersNotfPrefs(memberId: UserId,
-      onDone: (prefs: MembersNotfPrefsResponse) => void) {
-  get(`/-/load-notf-prefs?memberId=${memberId}`, onDone);
+export function loadCatsTagsSiteNotfPrefs(memberId: UserId,
+      onDone: (prefs: CatsTagsSiteNotfPrefsResponse) => void) {
+  get(`/-/load-cats-tags-site-notf-prefs?memberId=${memberId}`, onDone);
 }
 
 
