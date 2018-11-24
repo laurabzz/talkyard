@@ -15,23 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/// <reference path="../widgets.ts" />
-/// <reference path="../oop-methods.ts" />
 
 //------------------------------------------------------------------------------
    namespace debiki2.notfs {
 //------------------------------------------------------------------------------
 
 
-export function NotfPrefButton(props: { target: NotfPrefTarget, me: Myself }) {
-  const pref = me_findEffPageNotfPref(props.me, props.target);
-  return (
-      Button({ className: 'dw-notf-level', onClick: event => {
-        const rect = cloneEventTargetRect(event);
-        Server.loadMoreScriptsBundle(() => {
-          notfs['openNotfPrefDropdown'](rect, props);
-        });
-      }}, notfPref_title(pref)));
+export function NotfPrefButton(props: any) {
+  return null;
 }
 
 

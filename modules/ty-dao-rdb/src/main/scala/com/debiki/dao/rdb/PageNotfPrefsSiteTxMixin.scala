@@ -169,7 +169,7 @@ trait PageNotfPrefsSiteTxMixin extends SiteTransaction {
   }
 
 
-  def loadNotfPrefsForMemberAboutCatsAndSite(memberIds: Seq[MemberId]): Seq[PageNotfPref] = {
+  def loadNotfPrefsForMemberAboutCatsTagsSite(memberIds: Seq[MemberId]): Seq[PageNotfPref] = {
     loadContentNotfPrefsForMemberImpl(pageId = None, memberIds)
   }
 
@@ -191,10 +191,11 @@ trait PageNotfPrefsSiteTxMixin extends SiteTransaction {
         "and page_id is null"
       case Some(id) =>
         values.append(id)
-        // Need both prefs for the page, and, if missing, for ancestor categories
+        // NO: Need both prefs for the page, and, if missing, for ancestor categories
         // And if no cat prefs, then for the whole site. So load for pageId,
         // plus all cats and whole site i.e. no page id.
-        "and (page_id = ? or page_id is null)"
+        // INSTEAD: load separately. (And delete this whole comment)
+        "and page_id = ?" // or page_id is null)"
     }
     val query = s"""
       select * from page_notf_prefs3

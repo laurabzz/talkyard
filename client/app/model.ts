@@ -348,7 +348,8 @@ interface PagePostNrId {
 
 interface MyPageData {
   dbgSrc?: string;
-  pageNotfPref: MyAndInheritedNotfPref;
+  myPageNotfPref?: PageNotfPref;
+  groupsPageNotfPrefs: PageNotfPref[];
   readingProgress?: ReadingProgress;
   votes: any; // RENAME to votesByPostNr?   CLEAN_UP also see just below:  id or nr
   unapprovedPosts: { [id: number]: Post };
@@ -398,6 +399,8 @@ interface Myself {
   pageHelpMessage?: HelpMessage;
   closedHelpMessages: { [id: string]: number };  // id --> closed version of message   — id or nr?
 
+  myCatsTagsSiteNotfPrefs: PageNotfPref[];
+  groupsCatsTagsSiteNotfPrefs: PageNotfPref[];
   myDataByPageId: { [id: string]: MyPageData };
   myCurrentPageData: MyPageData;
 
@@ -439,35 +442,28 @@ interface PageUserSettings {
 }
 
 
-interface CatsTagsSiteNotfPrefs {
-  forCatsById: { [categoryId: number]: MyAndInheritedNotfPref };
-  //forTagsById: ...
-  forSite: MyAndInheritedNotfPref;
-}
-
-
 interface EffNotfPref {
   notfLevel?: NotfLevel;
   inheritedPref?: PageNotfPref;
 }
 
-interface MyAndInheritedNotfPref {  // RENAME to OwnAndInheritedNotfPref? no EffectiveContentNotfPref? no EffContNotfPref yes :-) ?
-  // EffectiveContentNotificationPreference  gah!
-  // EffContNotfPref  ok
-  notfLevel?: NotfLevel;
+
+interface NotfPrefTarget {
   pageId?: PageId;
   pagesInCategoryId?: CategoryId;
   wholeSite?: boolean;
-  anyInheritedNotfPref?: PageNotfPref;
 }
 
 
-interface PageNotfPref {
+interface EffContNotfPref extends NotfPrefTarget {
+  notfLevel?: NotfLevel;
+  inheritedNotfPref?: PageNotfPref;
+}
+
+
+interface PageNotfPref extends NotfPrefTarget {
   memberId: UserId;
   notfLevel: NotfLevel;
-  pageId?: PageId;
-  pagesInCategoryId?: CategoryId;
-  wholeSite?: boolean;
 }
 
 
@@ -1541,8 +1537,8 @@ interface ListDraftsResponse {
   pageTitlesById: { [pageId: string]: string };
 }
 
-interface CatsTagsSiteNotfPrefsResponse {
-  catsTagsSiteNotfPrefs: CatsTagsSiteNotfPrefs,
+interface PageNotfPrefsResponse {
+  pageNotfPrefs: PageNotfPref[],
   // Later: Category and group names, so can lookup ther names, for display.
 }
 

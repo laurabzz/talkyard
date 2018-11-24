@@ -127,7 +127,7 @@ declare namespace debiki2 {
   function deleteById(itemsWithId: any[], id);
 
   namespace notfs {
-    function NotfPrefButton(props: { pref: MyAndInheritedNotfPref, me: Myself });
+    function NotfPrefButton(props: { target: NotfPrefTarget, me: Myself });
   }
 
   namespace utils {
@@ -235,7 +235,7 @@ declare namespace debiki2 {
   function store_canDeletePage(store: Store): boolean;
   function store_canUndeletePage(store: Store): boolean;
   function store_canPinPage(store: Store): boolean;
-  var siteStatusToString;
+  function siteStatusToString(siteStatus: SiteStatus);
   var cloneRect;
   var cloneEventTargetRect;
 
@@ -280,8 +280,9 @@ declare namespace debiki2 {
     var Avatar;
   }
 
-  function notfPref_title(notfPref: MyAndInheritedNotfPref): string;
-  function notfPref_descr(notfPref: MyAndInheritedNotfPref): any;
+  function me_findEffPageNotfPref(me: Myself, target: NotfPrefTarget): EffContNotfPref;
+  function notfPref_title(notfPref: EffContNotfPref): string;
+  function notfLevel_descr(notfLevel: NotfLevel, effPref: EffContNotfPref): any;
 
   namespace edithistory {
 

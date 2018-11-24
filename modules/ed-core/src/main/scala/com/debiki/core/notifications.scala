@@ -261,7 +261,7 @@ case class PageNotfLevels(   // xx rm
 
 }
 
-
+/*
 /**
   * @param ownPageNotfLevel Any notf level one has set, directly on the page or category (or whole site).
   * @param inheritedPref Inherited from groups one is in, or from one's own category setting, if
@@ -275,6 +275,37 @@ case class EffPageNotfPref(
 case class EffSiteNotfPref(
   ownSitePref: Option[PageNotfPref],
   inheritedPref: Option[PageNotfPref])
+
+
+case class OwnGroupsMaxPrefs(ownPref: Option[PageNotfPref], groupsMaxPref: Option[PageNotfPref]) {
+  def maxPref: Option[PageNotfPref] = ownPref orElse groupsMaxPref
+}
+
+case class OwnGropsNotfPrefsForPage(
+  memberId: MemberId,
+  prefsByPageId: Map[PageId, OwnGroupsMaxPrefs]) {
+
+  def effPageNotfPref(
+    pageId: PageId,
+    ancestorCategoriesRootFirst: Seq[CategoryId],
+    ownGropsNotfPrefsForCatsTagsSite: OwnGropsNotfPrefsForCatsTagsSite): EffPageNotfPref = {
+
+    // Highest priority has one's own, or ones groups', notf prefs directly on the page.
+    // However, we also need to find from where prefs would get inherited, if we didn't
+    val directPagePrefs = prefsByPageId.get(pageId)
+    directPagePrefs foreach { pref =>
+      if (pref.groupsMaxPref.isDefined)
+        return EffPageNotfPref(pageId, pref.ownPref.map(_.notfLevel), pref.groupsMaxPref)
+    }
+  }
+} */
+
+/*
+case class OwnGropsNotfPrefsForCatsTagsSite(
+  memberId: MemberId,
+  prefsByCategoryId: Map[PageId, OwnGroupsMaxPrefs],
+  sitePrefs: OwnGroupsMaxPrefs)
+
 
 case class OwnAndGropsContNotfPrefs(
   memberId: MemberId,
@@ -343,7 +374,7 @@ case object OwnAndGropsContNotfPrefs {
       groupsMaxSitePref = groupsMaxSitePref)
   }
 
-  /*
+
   def apply(myPrefs: Seq[PageNotfPref], groupsPrefs: Seq[PageNotfPref]): MembersNotfPrefs = {
     val mySitePref = myPrefs.find(_.wholeSite)
     val myCatPrefs = myPrefs.filter(_.pagesInCategoryId.isDefined)
@@ -359,6 +390,7 @@ case object OwnAndGropsContNotfPrefs {
       myCategoryNotfLevels = myNotfLevelsByCatId,
       groupsMaxNotfSitePref = groupsMaxNotfSitePref,
       groupsMaxCatPrefs = Map.empty)
-  } */
+  }
 
 }
+*/

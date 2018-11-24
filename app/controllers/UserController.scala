@@ -1207,20 +1207,6 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
   }
 
 
-  /* xx rm
-  def savePageNotfLevel: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser, maxBytes = 500) {
-        request =>
-    val body = request.body
-    val pageId = (body \ "pageId").as[PageId]
-    val newNotfLevelInt = (body \ "pageNotfLevel").as[Int]
-    val newNotfLevel = NotfLevel.fromInt(newNotfLevelInt) getOrElse throwBadRequest(
-      "EsE6JP2SK", s"Bad page notf level: $newNotfLevelInt")
-    request.dao.savePageNotfPref(
-        PageNotfPref(request.theMember.id, pageId = Some(pageId), notfLevel = newNotfLevel))
-    Ok
-  } */
-
-
   def saveContentNotfPref: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser, maxBytes = 500) {  // [7RBP24]
         request =>
     import request.{dao, theRequester => requester}
@@ -1341,13 +1327,14 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
     val prefs = dao.loadMembersCatsTagsSiteNotfPrefs(member)
     //val groupsById = ...
     OkSafeJson(Json.obj(
-      "catsTagsSiteNotfPrefs" -> membersNotfPrefsToJson(prefs))
+      "pageNotfPrefs" -> prefs.map(JsX.JsPageNotfPref))
       //later: "categoryNamesById" -> ...,
       // "groupNamesById" ->  ..., needed for rendering prefs
       )
   }
 
 
+  /*
   def membersNotfPrefsToJson(prefs: OwnAndGropsContNotfPrefs): JsObject = {
     //val myCatPrefs = JsObject(prefs.ownPrefsByCatId.map(
     //  kv => kv._1.toString -> JsNumber(kv._2.toInt)))
@@ -1361,7 +1348,7 @@ class UserController @Inject()(cc: ControllerComponents, edContext: EdContext)
     Json.obj( // CatsAndSiteNotfPrefs
       "forSite" -> JsEffSiteNotfPref(prefs),
       "forCatsById" -> Json.obj())
-  }
+  } */
 
 
   def saveMemberNotfPrefs: Action[JsValue] = PostJsonAction(RateLimits.ConfigUser,

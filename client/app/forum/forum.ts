@@ -851,7 +851,7 @@ const LoadAndListTopics = createFactory({
 
 
 
-export const TopicsList = createComponent({
+const TopicsList = createComponent({
   displayName: 'TopicsList',
 
   getInitialState: function() {
@@ -1402,6 +1402,15 @@ const CategoryRow = createComponent({
 
     const categoryIconClass = category_iconClass(category, store);
 
+    /*
+    const catNotfPrefs =
+        me.myCurrentPageData.pageNotfPref && me.myCurrentPageData.pageNotfPref.pagesInCategoryId
+          ? me.myCurrentPageData.pageNotfPref.notfLevel ||
+          : null;
+    const anyNotfLevel = !me.isLoggedIn ? null :
+        notfs.NotfPrefButton({ pref: me.myCurrentPageData.pageNotfPref, me }); */
+    const anyNotfLevel = null;
+
     return (
       r.tr({ className: 'esForum_cats_cat' + isNewClass + isDeletedClass },
         r.td({ className: 'forum-info' }, // [rename] to esForum_cats_cat_meta
@@ -1410,7 +1419,8 @@ const CategoryRow = createComponent({
                 pathname: this.props.forumPath + RoutePathLatest + '/' + this.props.category.slug,
                 search: this.props.location.search }, className: categoryIconClass + 'forum-title' },
               category.name, isDefault), isDeletedText),
-          r.p({ className: 'forum-description' }, category.description)),
+          r.p({ className: 'forum-description' }, category.description),
+          anyNotfLevel),
         r.td({},  // class to esForum_cats_cat_topics?
           r.table({ className: 'topic-table-excerpt table table-condensed' },
             r.tbody({},

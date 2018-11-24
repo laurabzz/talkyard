@@ -78,7 +78,8 @@ export function makeAutoPage(): Page {
 export function makeNoPageData(): MyPageData {
   return {
     dbgSrc: 'MyNP',
-    pageNotfPref: { notfLevel: NotfLevel.Normal },
+    myPageNotfPref: <PageNotfPref> undefined,
+    groupsPageNotfPrefs: <PageNotfPref[]> [],
     votes: {},
     unapprovedPosts: {},
     unapprovedPostAuthors: [],
@@ -1479,6 +1480,8 @@ function makeStranger(store: Store): Myself {
 
     closedHelpMessages: <any> {},
 
+    myCatsTagsSiteNotfPrefs: <PageNotfPref[]> [],
+    groupsCatsTagsSiteNotfPrefs: <PageNotfPref[]> [],
     myDataByPageId: <any> {},
     myCurrentPageData: makeNoPageData(),
 

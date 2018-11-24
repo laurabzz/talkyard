@@ -452,9 +452,9 @@ const NotfPrefsTab = createFactory({
   },
 
   loadNotfPrefs: function(memberId) {
-    Server.loadCatsTagsSiteNotfPrefs(memberId, (response: CatsTagsSiteNotfPrefsResponse) => {
+    Server.loadCatsTagsSiteNotfPrefs(memberId, (response: PageNotfPrefsResponse) => {
       if (this.isGone) return;
-      this.setState({ catsTagsSiteNotfPrefs: response.catsTagsSiteNotfPrefs });
+      this.setState({ pageNotfPrefs: response.pageNotfPrefs });
     });
   },
 
@@ -484,7 +484,7 @@ const NotfPrefsTab = createFactory({
     const me: Myself = store.me;
     const user: MemberInclDetails = this.props.user;
     const isSystemUser = user.id === SystemUserId;
-    const notfPrefs: CatsTagsSiteNotfPrefs = this.state.catsTagsSiteNotfPrefs;
+    const notfPrefs = 'unimpl';
 
     if (!notfPrefs)
       return r.p({}, t.Loading);
@@ -501,10 +501,10 @@ const NotfPrefsTab = createFactory({
     return (
       r.form({ role: 'form', onSubmit: this.savePrefs },
 
-        r.pre({}, JSON.stringify(notfPrefs)),
+        r.pre({}, JSON.stringify(this.state.pageNotfPrefs)),
 
         r.p({}, "Default page notifications, site wide:"),
-        notfs.NotfPrefButton({ pref: notfPrefs.forSite, me }),
+        "UNIMPL 282460434", //notfs.NotfPrefButton({ pref: notfPrefs.forSite, me }),
 
         /* xx rm
         r.p({}, "Remove the stuff below excet for the Save btn?"),

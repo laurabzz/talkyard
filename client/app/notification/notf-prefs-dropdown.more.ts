@@ -55,13 +55,13 @@ const NotfsLevelDropdownModal = createComponent({
   },
 
   // dupl code [6KUW24]
-  openAtFor: function(rect, props: { pref: MyAndInheritedNotfPref, me: Myself }) {
+  openAtFor: function(rect, props: { target: NotfPrefTarget, me: Myself }) {
                                 // subject: NotfSubject, currentLevel: NotfLevel
     this.setState({
       isOpen: true,
       atX: rect.left,
       atY: rect.bottom,
-      pref: props.pref,
+      target: props.target,
       me: props.me,
       //currentLevel: currentLevel,
     });
@@ -73,8 +73,8 @@ const NotfsLevelDropdownModal = createComponent({
 
   saveNotfLevel: function(notfLevel) {
     const me: Myself = this.state.me;
-    const pref: MyAndInheritedNotfPref = this.state.pref;
-    Server.saveContNotfPrefUpdStore(me.id, { ...pref, notfLevel });
+    const target: NotfPrefTarget = this.state.target;
+    Server.saveContNotfPrefUpdStore(me.id, target, notfLevel);
     /*
     if (pref.wholeSite) {
     }
@@ -95,7 +95,7 @@ const NotfsLevelDropdownModal = createComponent({
   render: function() {
     const state = this.state;
     const store: Store = this.state.store;
-    let defaultListItem;
+    const me: Myself = store.me;
     let everyPostListItem;
     let newTopicsListItem;
     let normalListItem;
@@ -103,44 +103,48 @@ const NotfsLevelDropdownModal = createComponent({
     let mutedListItem;
 
     if (state.isOpen) {
-      const pref: MyAndInheritedNotfPref = this.state.pref;
-      const currentLevel: NotfLevel = pref.notfLevel;
+      const target: NotfPrefTarget = this.state.target;
+      const pref = me_findEffPageNotfPref(me, target);
+      const inheritedLevel = pref.inheritedNotfPref && pref.inheritedNotfPref.notfLevel;
+      const currentLevel: NotfLevel = pref.notfLevel || inheritedLevel;
       dieIf(!pref.pageId && !pref.wholeSite, 'EsE4GK02');   // &&!pref.tagLabel
+
+      const explainWhyInherited = pref.notfLevel ? null : (
+          r.p({}, "Inherited from: ", JSON.stringify(pref.inheritedNotfPref)));
+
       console.log("Debug:\n" + JSON.stringify(pref));
-      defaultListItem =
-        ExplainingListItem({
-          active: !currentLevel,
-          title: r.span({ className: 'e_NtfDef' }, t.nl.Default),
-          text: pref.anyInheritedNotfPref ?
-              notfPref_descr(pref.anyInheritedNotfPref) + " because ... I18N" : t.nl.Normal,
-          onSelect: () => this.saveNotfLevel(null) });
       everyPostListItem =
         ExplainingListItem({
           active: currentLevel === NotfLevel.WatchingAll,
+          whyActive: explainWhyInherited,  // NEXTT instead, incl in text?
           title: r.span({ className: 'e_NtfAll' }, t.nl.WatchingAll),
-          text: notfPref_descr({ ...pref, notfLevel: NotfLevel.WatchingAll }),
+          text: notfLevel_descr(NotfLevel.WatchingAll, pref),
           onSelect: () => this.saveNotfLevel(NotfLevel.WatchingAll) });
       newTopicsListItem = pref.pageId ? null :
         ExplainingListItem({
           active: currentLevel === NotfLevel.WatchingFirst,
+          whyActive: explainWhyInherited,
           title: r.span({ className: 'e_NtfFst' }, t.nl.WatchingFirst),
-          text: notfPref_descr({ ...pref, notfLevel: NotfLevel.WatchingFirst }),
+          text: notfLevel_descr(NotfLevel.WatchingFirst, pref),
           onSelect: () => this.saveNotfLevel(NotfLevel.WatchingFirst) });
       normalListItem =
         ExplainingListItem({
           active: currentLevel === NotfLevel.Normal,
+          whyActive: explainWhyInherited,
           title: r.span({ className: '' }, t.nl.Normal),
           text: t.nl.NormalDescr,
           onSelect: () => this.saveNotfLevel(NotfLevel.Normal) }),
       hushedListItem =
         ExplainingListItem({
           active: currentLevel === NotfLevel.Hushed,
+          whyActive: explainWhyInherited,
           title: r.span({ className: '' }, t.nl.Hushed),
           text: t.nl.HushedDescr,
           onSelect: () => this.saveNotfLevel(NotfLevel.Hushed) }),
       mutedListItem =
         ExplainingListItem({
           active: currentLevel === NotfLevel.Muted,
+          whyActive: explainWhyInherited,
           title: r.span({ className: 'e_NtfMtd'  }, t.nl.Muted),
           text: t.nl.MutedTopic,
           onSelect: () => this.saveNotfLevel(NotfLevel.Muted) });
@@ -149,7 +153,6 @@ const NotfsLevelDropdownModal = createComponent({
     return (
       DropdownModal({ show: state.isOpen, onHide: this.close, atX: state.atX, atY: state.atY,
           pullLeft: true },
-        defaultListItem,
         everyPostListItem,
         newTopicsListItem,
         normalListItem,

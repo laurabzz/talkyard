@@ -559,7 +559,7 @@ trait SiteTransaction {
   def loadPageNotfPrefsOnCategory(categoryId: CategoryId): Seq[PageNotfPref]
   def loadPageNotfPrefsOnSite(): Seq[PageNotfPref]
   def loadNotfPrefsForMemberAboutPage(pageId: PageId, memberIds: Seq[MemberId]): Seq[PageNotfPref]
-  def loadNotfPrefsForMemberAboutCatsAndSite(memberIds: Seq[MemberId]): Seq[PageNotfPref]
+  def loadNotfPrefsForMemberAboutCatsTagsSite(memberIds: Seq[MemberId]): Seq[PageNotfPref]
 
   def listUsernames(pageId: PageId, prefix: String): Seq[NameAndUsername]
 

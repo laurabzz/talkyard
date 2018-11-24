@@ -848,51 +848,19 @@ export function lockThreatLevel(userId: UserId, threatLevel: ThreatLevel, succes
 }
 
 
-export function saveContNotfPrefUpdStore(memberId: UserId, pref: MyAndInheritedNotfPref) {
+export function saveContNotfPrefUpdStore(memberId: UserId, target: NotfPrefTarget,
+      notfLevel: NotfLevel) {
+  const notfPref: PageNotfPref = { memberId, notfLevel, ...target };
   postJsonSuccess('/-/save-content-notf-pref', () => {
     const store: Store = ReactStore.allData();
     const me: Myself = store.me;
     const myCurrentPageData: MyPageData = me.myCurrentPageData;
-    const pageNotfPref = myCurrentPageData.pageNotfPref;
     const newMe = { ...me,
-      myCurrentPageData: { ...myCurrentPageData,
-        pageNotfPref: { ...pageNotfPref,
-          notfLevel: pref.notfLevel,
-        },
-      },
+      myCurrentPageData: { ...myCurrentPageData, myPageNotfPref: notfPref },
     };
     ReactActions.patchTheStore({ me: newMe });
-  }, {
-    memberId,
-    notfLevel: pref.notfLevel,
-    pageId: pref.pageId,
-    pagesInCategoryId: pref.pagesInCategoryId,
-    wholeSite: pref.wholeSite,
-  });
+  }, notfPref);
 }
-
-
-/*export function savePageNoftLevel(newNotfLevel) {   xx rm
-  postJsonSuccess('/-/set-page-notf-level', () => {
-    const store: Store = ReactStore.allData();
-    const me: Myself = store.me;
-    const myCurrentPageData: MyPageData = me.myCurrentPageData;
-    const pageNotfPref = myCurrentPageData.pageNotfPref;
-    const newMe = { ...me,
-      myCurrentPageData: { ...myCurrentPageData,
-        pageNotfPref: { ...pageNotfPref,
-          notfLevel: newNotfLevel
-        },
-      },
-    };
-    //const myPageData: MyPageData = me.myCurrentPageData;
-    //myPageData.pageNotfPref = { notfLevel: newNotfLevel };  // [red ux] modify ing state in place
-    ReactActions.patchTheStore({ me: newMe });
-  }, {
-    pageId: getPageId(),
-    pageNotfLevel: newNotfLevel
-  });
-} */
 
 
 export function loadMyself(callback: (user: any) => void) {
@@ -955,14 +923,14 @@ export function saveAboutUserPrefs(prefs, isGroup: boolean, success: () => void)
 
 
 export function loadCatsTagsSiteNotfPrefs(memberId: UserId,
-      onDone: (prefs: CatsTagsSiteNotfPrefsResponse) => void) {
+      onDone: (response: PageNotfPrefsResponse) => void) {
   get(`/-/load-cats-tags-site-notf-prefs?memberId=${memberId}`, onDone);
 }
 
 
-export function saveNotfPrefs(prefs: MembersNotfPrefs, onDone: () => void) {
+/*export function saveNotfPrefs(prefs: PageNotfPref[], onDone: () => void) {
   postJsonSuccess(`/-/save-notf-prefs`, onDone, prefs);
-}
+}*/
 
 
 export function saveMemberPrivacyPrefs(prefs, success: () => void) {

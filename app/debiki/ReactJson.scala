@@ -628,15 +628,20 @@ class JsonMaker(dao: SiteDao) {
     // dupl line [8AKBR0]
     val notfsAndCounts = loadNotifications(user.id, tx, unseenFirst = true, limit = 20)
 
-    val (ownAndInheritedNotfPref, votes, unapprovedPosts, unapprovedAuthors) =
+    val ownIdAndGroupIds = tx.loadGroupIdsMemberIdFirst(user)
+
+    COULD_OPTIMIZE // could cache this, unless on the user's profile page (then want up-to-date info)?
+    val ownCatsTagsSiteNotfPrefs = tx.loadNotfPrefsForMemberAboutCatsTagsSite(ownIdAndGroupIds)
+
+    val (pageNotfPrefs: Seq[PageNotfPref], votes, unapprovedPosts, unapprovedAuthors) =
       anyPageId map { pageId =>
-        // NEXT
-        // A little bit dupl code [6RBRQ204]
-        val ownIdAndGroupIds = tx.loadGroupIdsMemberIdFirst(user)
-        val prefsList = tx.loadNotfPrefsForMemberAboutPage(pageId, ownIdAndGroupIds)
+        // A little bit dupl code [6RBRQ204]  — no, fixed now
+        // COULD_OPTIMIZE reuse ownCatsTagsSiteNotfPrefs
+        val pageNotfPrefs = tx.loadNotfPrefsForMemberAboutPage(pageId, ownIdAndGroupIds)
+        /*
         val ownAndGroupPrefs = OwnAndGropsContNotfPrefs(user.id, prefsList)
         val effPrefs = ownAndGroupPrefs.effPageNotfPref(pageId)
-        val effPagePrefJson = JsEffPageNotfPref(effPrefs)
+        val effPagePrefJson = JsEffPageNotfPref(effPrefs) */
           //prefs.mySiteNotfLevel, prefs.groupsMaxSiteNotfPref, forPageId = Some(pageId))
         /*
         val ownAndInheritedNotfPref = user.anyMemberId.map({ userId =>
@@ -649,8 +654,10 @@ class JsonMaker(dao: SiteDao) {
         // + flags, interesting for staff, & so people won't attempt to flag twice [7KW20WY1]
         val (postsJson, postAuthorsJson) =
           unapprovedPostsAndAuthorsJson(user, pageId, unapprovedPostAuthorIds, tx)
-        (effPagePrefJson, votes, postsJson, postAuthorsJson)
-      } getOrElse (JsEmptyObj, JsEmptyObj, JsEmptyObj, JsArray())
+
+        (pageNotfPrefs, votes, postsJson, postAuthorsJson)
+      } getOrElse (
+          Nil, JsEmptyObj, JsEmptyObj, JsArray())
 
     val threatLevel = user match {
       case member: Member => member.threatLevel
@@ -663,12 +670,13 @@ class JsonMaker(dao: SiteDao) {
     val anyReadingProgress = anyPageId.flatMap(tx.loadReadProgress(user.id, _))
     val anyReadingProgressJson = anyReadingProgress.map(makeReadingProgressJson).getOrElse(JsNull)
 
-    val userDataByPageId = anyPageId match {
+    val ownDataByPageId = anyPageId match {
       case None => Json.obj()
       case Some(pageId) =>
         Json.obj(pageId ->
           Json.obj(  // MyPageData
-            "pageNotfPref" -> ownAndInheritedNotfPref,
+            "myPageNotfPref" -> pageNotfPrefs.find(_.peopleId == user.id).map(JsPageNotfPref),
+            "groupsPageNotfPrefs" -> pageNotfPrefs.filter(_.peopleId != user.id).map(JsPageNotfPref),
             "readingProgress" -> anyReadingProgressJson,
             "votes" -> votes,
             // later: "flags" -> JsArray(...) [7KW20WY1]
@@ -717,7 +725,8 @@ class JsonMaker(dao: SiteDao) {
       "restrictedTopicsUsers" -> restrictedTopicsUsers,
       "restrictedCategories" -> restrictedCategories,
       "closedHelpMessages" -> JsObject(Nil),
-      "myDataByPageId" -> userDataByPageId,
+      "myCatsTagsSiteNotfPrefs" -> JsArray(ownCatsTagsSiteNotfPrefs.map(JsPageNotfPref)),
+      "myDataByPageId" -> ownDataByPageId,
       "marksByPostId" -> JsObject(Nil))
 
     if (user.isAdmin) {
@@ -1840,6 +1849,7 @@ object JsX {
       "text" -> JsString(draft.text))
   }
 
+  /*
   def JsEffPageNotfPref(pref: EffPageNotfPref): JsValue = {
     val inheritedPref: JsValue = pref.inheritedPref.map(JsPageNotfPref).getOrElse(JsNull)
     Json.obj(  // MyAndInheritedNotfPref  RENAME to EffPageNotfPref ?
@@ -1854,7 +1864,7 @@ object JsX {
       "wholeSite" -> JsTrue,
       "notfLevel" -> JsNumberOrNull(pref.ownSitePref.map(_.notfLevel.toInt)),
       "inheritedPref" -> inheritedPref)
-  }
+  }*/
 
   def JsPageNotfPref(notfPref: PageNotfPref): JsObject = {
     Json.obj(  // PageNotfPref   ? RENAME to ContNotfPref, + fields too, see Scala class
