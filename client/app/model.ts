@@ -348,6 +348,7 @@ interface PagePostNrId {
 
 interface MyPageData {
   dbgSrc?: string;
+  pageId: PageId;
   myPageNotfPref?: PageNotfPref;
   groupsPageNotfPrefs: PageNotfPref[];
   readingProgress?: ReadingProgress;

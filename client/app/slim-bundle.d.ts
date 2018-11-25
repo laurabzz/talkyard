@@ -101,6 +101,8 @@ declare namespace debiki2 {
 
   let iframeOffsetWinSize;
 
+  function oneIfDef(x: any): number;
+
   function $first(selector: string): HTMLElement;
   function $all(selector: string): HTMLCollectionOf<HTMLElement>;
   function $byId(elemId: string): HTMLElement;
@@ -127,7 +129,8 @@ declare namespace debiki2 {
   function deleteById(itemsWithId: any[], id);
 
   namespace notfs {
-    function NotfPrefButton(props: { target: NotfPrefTarget, me: Myself });
+    function NotfPrefButton(props: {
+        target: NotfPrefTarget, store: Store, othersPrefs?: PageNotfPref[] });
   }
 
   namespace utils {
@@ -280,7 +283,7 @@ declare namespace debiki2 {
     var Avatar;
   }
 
-  function me_findEffPageNotfPref(me: Myself, target: NotfPrefTarget): EffContNotfPref;
+  function notfPrefTarget_findEffNotfPref(target: NotfPrefTarget, store: Store, othersPrefs?: PageNotfPref[]): EffContNotfPref;
   function notfPref_title(notfPref: EffContNotfPref): string;
   function notfLevel_descr(notfLevel: NotfLevel, effPref: EffContNotfPref): any;
 

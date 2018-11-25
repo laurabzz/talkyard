@@ -1402,14 +1402,8 @@ const CategoryRow = createComponent({
 
     const categoryIconClass = category_iconClass(category, store);
 
-    /*
-    const catNotfPrefs =
-        me.myCurrentPageData.pageNotfPref && me.myCurrentPageData.pageNotfPref.pagesInCategoryId
-          ? me.myCurrentPageData.pageNotfPref.notfLevel ||
-          : null;
     const anyNotfLevel = !me.isLoggedIn ? null :
-        notfs.NotfPrefButton({ pref: me.myCurrentPageData.pageNotfPref, me }); */
-    const anyNotfLevel = null;
+        notfs.NotfPrefButton({ store, target: { pagesInCategoryId: category.id } });
 
     return (
       r.tr({ className: 'esForum_cats_cat' + isNewClass + isDeletedClass },

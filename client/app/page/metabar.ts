@@ -88,7 +88,7 @@ export var Metabar = createComponent({
     const page: Page = store.currentPage;
     const ui = this.state.ui;
     const me: Myself = store.me;
-    const effPageNotfPref = me_findEffPageNotfPref(me, { pageId: page.pageId });
+    const effPageNotfPref = notfPrefTarget_findEffNotfPref({ pageId: page.pageId }, store);
 
     const notfLevelElem = me.isAuthenticated && !ui.showDetails
       ? r.span({ className: 'dw-page-notf-level', onClick: this.onToggleDetailsClick },
@@ -172,7 +172,7 @@ const MetabarDetails = createComponent({
     const notificationsElem = !userAuthenticated ? null :
       r.div({},
         r.div({ className: 'esMB_Dtls_Ntfs_Lbl' }, t.mb.NotfsAbtThisC),
-        notfs.NotfPrefButton({ me, target: { pageId: store.currentPageId } }));
+        notfs.NotfPrefButton({ target: { pageId: store.currentPageId }, store }));
 
     return (
       r.div({ className: 'dw-cmts-tlbr-details' },

@@ -21,7 +21,8 @@
 //------------------------------------------------------------------------------
 
 
-export function NotfPrefButton(props: any) {
+export function NotfPrefButton(
+      props: { target: NotfPrefTarget, store: Store, othersPrefs?: PageNotfPref[] }) {
   return null;
 }
 

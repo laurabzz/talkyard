@@ -96,7 +96,27 @@ export function siteStatusToString(siteStatus: SiteStatus): string {
 }
 
 
-export function me_findEffPageNotfPref(me: Myself, target: NotfPrefTarget): EffContNotfPref {
+export function pageNotfPrefs_copyWithUpdatedPref(
+     prefs: PageNotfPref[], newNotfPref: PageNotfPref): PageNotfPref[] {
+  const index = prefs.findIndex((p: PageNotfPref) =>
+      p.pageId === newNotfPref.pageId ||
+      p.pagesInCategoryId === newNotfPref.pagesInCategoryId ||
+      (p.wholeSite && newNotfPref.wholeSite));
+  const updPrefsList = index >= 0 ?
+      prefs.splice(index, 1, newNotfPref) : [...prefs, newNotfPref];
+  return updPrefsList;
+}
+
+
+export function notfPrefTarget_findEffNotfPref(
+      target: NotfPrefTarget, store: Store, othersPrefs?: PageNotfPref[]): EffContNotfPref {
+
+  // @ifdef DEBUG
+  dieIf(oneIfDef(target.pageId) + oneIfDef(target.pagesInCategoryId) +
+      oneIfDef(target.wholeSite) !== 1, 'TyE6SKDW207');
+  // @endif
+
+  const me: Myself = store.me;
   const result: EffContNotfPref = { ...target };
 
   const myPageData: MyPageData | undefined = me.myDataByPageId[target.pageId];
@@ -112,8 +132,52 @@ export function me_findEffPageNotfPref(me: Myself, target: NotfPrefTarget): EffC
     }
   }
 
-  // ... check one's own, and one's groups, settings for the page's category,
-  // and whole site.
+  const page = store.pagesById[target.pageId];
+  const categoryId = page ? page.categoryId : target.pagesInCategoryId;
+  if (categoryId) {
+    const myPref = _.find(me.myCatsTagsSiteNotfPrefs,
+        (p: PageNotfPref) => p.pagesInCategoryId == categoryId);
+    const groupsPrefs = _.filter(me.groupsCatsTagsSiteNotfPrefs,
+        (p: PageNotfPref) => p.pagesInCategoryId == categoryId);
+    const maxGroupsPref = maxPref(groupsPrefs);
+
+    if (target.pageId) {
+      result.inheritedNotfPref = myPref || maxGroupsPref;
+      if (result.inheritedNotfPref)
+        return result;
+    }
+    else if (target.pagesInCategoryId) {
+      if (myPref) {
+        result.notfLevel = myPref.notfLevel;
+      }
+      if (maxGroupsPref) {
+        result.inheritedNotfPref = maxGroupsPref;
+        return result;
+      }
+    }
+
+    //const category = _.find(store.currentCategories, (c: Category) => c.id === categoryId);
+  }
+
+  {
+    const myPref = _.find(me.myCatsTagsSiteNotfPrefs, (p: PageNotfPref) => p.wholeSite);
+    const groupsPrefs = _.filter(me.groupsCatsTagsSiteNotfPrefs, (p: PageNotfPref) => p.wholeSite);
+    const maxGroupsPref = maxPref(groupsPrefs);
+    if (!target.wholeSite) {
+      result.inheritedNotfPref = myPref || maxGroupsPref;
+      if (result.inheritedNotfPref)
+        return result;
+    }
+    else {
+      if (myPref) {
+        result.notfLevel = myPref.notfLevel;
+      }
+      if (maxGroupsPref) {
+        result.inheritedNotfPref = maxGroupsPref;
+        return result;
+      }
+    }
+  }
 
   // Default fallback.
   result.inheritedNotfPref = { notfLevel: NotfLevel.Normal, memberId: Groups.EveryoneId };
@@ -161,40 +225,54 @@ export function notfPref_title(notfPref: EffContNotfPref): string {
 
 
 export function notfLevel_descr(notfLevel: NotfLevel, effPref: EffContNotfPref): any {
+  let descr;
   switch (notfLevel) {
     case NotfLevel.EveryPostAllEdits:
-      return 'EveryPostAllEdits unimpl';
+      descr = 'EveryPostAllEdits unimpl';
+      break;
     case NotfLevel.WatchingAll:
-      if (effPref.pageId) return t.nl.WatchingAllTopic;
-      if (effPref.pagesInCategoryId) return t.nl.WatchingAllCat;
+      if (effPref.pageId) descr = t.nl.WatchingAllTopic;
+      else if (effPref.pagesInCategoryId) descr = t.nl.WatchingAllCat;
       //if (???) return t.nl.WatchingAllTag;
-      if (effPref.wholeSite) return t.nl.WatchingAllSite;
+      else if (effPref.wholeSite) descr = t.nl.WatchingAllSite;
       break;
     case NotfLevel.TopicProgress:
-      return 'TopicProgress unimpl';
+      descr = 'TopicProgress unimpl';
+      break;
     case NotfLevel.TopicSolved:
-      return 'TopicSolved unimpl';
+      descr = 'TopicSolved unimpl';
+      break;
     case NotfLevel.WatchingFirst:
-      if (effPref.pagesInCategoryId) return t.nl.WatchingAllCat;
-      //if (???) return t.nl.WatchingAllTag;
-      if (effPref.wholeSite) return t.nl.WatchingAllSite;
+      if (effPref.pagesInCategoryId) descr = t.nl.WatchingAllCat;
+      //se if (???) return t.nl.WatchingAllTag;
+      else if (effPref.wholeSite) descr = t.nl.WatchingAllSite;
       // @ifdef DEBUG
       dieIf(effPref.pageId, 'TyE7WK20R');
       // @endif
-      return t.nl.WatchingFirst;
+      descr = t.nl.WatchingFirst;
+      break;
     case NotfLevel.Tracking:
-      return t.nl.Tracking;
+      descr = t.nl.Tracking;
+      break;
     case NotfLevel.Normal:
-      return t.nl.NormalDescr;
+      descr = t.nl.NormalDescr;
+      break;
     case NotfLevel.Hushed:
-      return t.nl.HushedDescr;
+      descr = t.nl.HushedDescr;
+      break;
     case NotfLevel.Muted:
-      return t.nl.MutedTopic;
+      descr = t.nl.MutedTopic;
+      break;
   }
+
   // @ifdef DEBUG
-  die('TyE2AKS403');
+  dieIf(!descr, 'TyE2AKS403');
   // @endif
-  return '?';
+
+  const explainWhyInherited = effPref.notfLevel ? null : (
+      r.p({}, "Inherited from: ", JSON.stringify(effPref.inheritedNotfPref)));
+
+  return rFragment({}, descr, explainWhyInherited);
 }
 
 
@@ -239,6 +317,16 @@ export function me_hasRead(me: Myself, post: Post) {
   return myPageData.postNrsAutoReadLongAgo.indexOf(post.nr) >= 0 ||
       myPageData.postNrsAutoReadNow.indexOf(post.nr) >= 0;
 }
+
+export function me_copyWithNewPageData(me: Myself, newPageData: MyPageData): Myself {
+  const myCurrentPageData = newPageData.pageId === me.myCurrentPageData.pageId ?
+      newPageData : me.myCurrentPageData;
+  const myDataByPageId = { ...me.myDataByPageId };
+  myDataByPageId[newPageData.pageId] = newPageData;
+  const newMe = { ...me, myCurrentPageData, myDataByPageId };
+  return newMe;
+}
+
 
 
 // Users

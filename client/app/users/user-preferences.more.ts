@@ -484,9 +484,9 @@ const NotfPrefsTab = createFactory({
     const me: Myself = store.me;
     const user: MemberInclDetails = this.props.user;
     const isSystemUser = user.id === SystemUserId;
-    const notfPrefs = 'unimpl';
+    const usersPrefs = this.state.pageNotfPrefs;
 
-    if (!notfPrefs)
+    if (!usersPrefs)
       return r.p({}, t.Loading);
 
     /* Dupl Saving... code [7UKBQT2]
@@ -504,7 +504,7 @@ const NotfPrefsTab = createFactory({
         r.pre({}, JSON.stringify(this.state.pageNotfPrefs)),
 
         r.p({}, "Default page notifications, site wide:"),
-        "UNIMPL 282460434", //notfs.NotfPrefButton({ pref: notfPrefs.forSite, me }),
+        notfs.NotfPrefButton({ target: { wholeSite: true }, store, othersPrefs: usersPrefs }),
 
         /* xx rm
         r.p({}, "Remove the stuff below excet for the Save btn?"),

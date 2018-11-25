@@ -23,8 +23,9 @@
 //------------------------------------------------------------------------------
 
 
-export function NotfPrefButton(props: { target: NotfPrefTarget, me: Myself }) {
-  const pref = me_findEffPageNotfPref(props.me, props.target);
+export function NotfPrefButton(props: {
+    target: NotfPrefTarget, store: Store, othersPrefs?: PageNotfPref[] }) {
+  const pref = notfPrefTarget_findEffNotfPref(props.target, props.store, props.othersPrefs);
   return (
       Button({ className: 'dw-notf-level', onClick: event => {
         const rect = cloneEventTargetRect(event);

@@ -638,6 +638,9 @@ class JsonMaker(dao: SiteDao) {
         // A little bit dupl code [6RBRQ204]  — no, fixed now
         // COULD_OPTIMIZE reuse ownCatsTagsSiteNotfPrefs
         val pageNotfPrefs = tx.loadNotfPrefsForMemberAboutPage(pageId, ownIdAndGroupIds)
+        SECURITY // minor: filter out prefs for cats one may not access.  [7RKBGW02]
+        SECURITY // Ensure done when generating notfs.
+
         /*
         val ownAndGroupPrefs = OwnAndGropsContNotfPrefs(user.id, prefsList)
         val effPrefs = ownAndGroupPrefs.effPageNotfPref(pageId)
@@ -675,6 +678,7 @@ class JsonMaker(dao: SiteDao) {
       case Some(pageId) =>
         Json.obj(pageId ->
           Json.obj(  // MyPageData
+            "pageId" -> pageId,
             "myPageNotfPref" -> pageNotfPrefs.find(_.peopleId == user.id).map(JsPageNotfPref),
             "groupsPageNotfPrefs" -> pageNotfPrefs.filter(_.peopleId != user.id).map(JsPageNotfPref),
             "readingProgress" -> anyReadingProgressJson,

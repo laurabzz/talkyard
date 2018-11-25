@@ -849,16 +849,26 @@ export function lockThreatLevel(userId: UserId, threatLevel: ThreatLevel, succes
 
 
 export function saveContNotfPrefUpdStore(memberId: UserId, target: NotfPrefTarget,
-      notfLevel: NotfLevel) {
-  const notfPref: PageNotfPref = { memberId, notfLevel, ...target };
+      notfLevel: NotfLevel, onDone?: () => void) {
+  const notfPref: PageNotfPref = { ...target, memberId, notfLevel };
   postJsonSuccess('/-/save-content-notf-pref', () => {
     const store: Store = ReactStore.allData();
     const me: Myself = store.me;
-    const myCurrentPageData: MyPageData = me.myCurrentPageData;
-    const newMe = { ...me,
-      myCurrentPageData: { ...myCurrentPageData, myPageNotfPref: notfPref },
-    };
-    ReactActions.patchTheStore({ me: newMe });
+    if (memberId === me.id) {
+      const pageData: MyPageData = me.myDataByPageId[target.pageId];
+      let newMe: Myself;
+      if (pageData) {
+        newMe = me_copyWithNewPageData(me, { ...pageData, myPageNotfPref: notfPref })
+      }
+      else {
+        const updPrefs = pageNotfPrefs_copyWithUpdatedPref(me.myCatsTagsSiteNotfPrefs, notfPref);
+        newMe = { ...me, myCatsTagsSiteNotfPrefs: updPrefs };
+      }
+      if (newMe) {
+        ReactActions.patchTheStore({ me: newMe });
+      }
+    }
+    if (onDone) onDone();
   }, notfPref);
 }
 

@@ -40,7 +40,6 @@ export interface ExplainingTitleText {
   iconUrl?: string;
   title: string;
   text: any;
-  whyActive?: any;
   key?: any;
 }
 
@@ -69,9 +68,7 @@ export var ExplainingListItem = createComponent({
       r.li({ className: 'esExplDrp_entry' + activeClass },
         r.a({ onClick: this.onClick, id: this.props.id, className: this.props.className },
           r.div({ className: 'esExplDrp_entry_title' }, entry.title),
-          r.div({ className: 'esExplDrp_entry_expl' }, entry.text),
-          !entry.whyActive || !activeClass ? null :
-              r.div({ className: 'esExplDrp_entry_why' }, entry.whyActive))));
+          r.div({ className: 'esExplDrp_entry_expl' }, entry.text))));
   },
 });
 
